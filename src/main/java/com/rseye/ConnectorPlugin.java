@@ -3,12 +3,11 @@ package com.rseye;
 import com.google.gson.Gson;
 import com.google.inject.Provides;
 import com.rseye.io.RequestHandler;
-import com.rseye.object.Login;
-import com.rseye.object.Position;
-import com.rseye.object.StatChanges;
+import com.rseye.object.*;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.Player;
+import net.runelite.api.Quest;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.StatChanged;
@@ -19,6 +18,8 @@ import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 
 import javax.inject.Inject;
+import java.util.Arrays;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @Slf4j
@@ -39,6 +40,8 @@ public class ConnectorPlugin extends Plugin {
 	private Player player;
 	private Position lastPlayerPosition;
 	private CopyOnWriteArrayList<StatChanged> lastStatChanges;
+	private CopyOnWriteArrayList<QuestChanges.Quest> lastQuestStateChanges;
+	private ConcurrentHashMap<Integer, QuestChanges.Quest> questStates;
 
 	@Override
 	protected void startUp() throws Exception {
@@ -46,6 +49,8 @@ public class ConnectorPlugin extends Plugin {
 		this.requestHandler = new RequestHandler(config);
 		this.gson = new Gson();
 		this.lastStatChanges = new CopyOnWriteArrayList<>();
+		this.lastQuestStateChanges = new CopyOnWriteArrayList<>();
+		this.questStates = new ConcurrentHashMap<>();
 	}
 
 	@Override
@@ -66,7 +71,8 @@ public class ConnectorPlugin extends Plugin {
 			return;
 		}
 		updatePlayerPosition();
-		postLastTickStatChanges(); // group together stat changes since there can be multiple per tick
+		updateLastTickStatChanges(); // group together stat changes since there can be multiple per tick
+		updateQuestStates();
 	}
 
 	@Subscribe
@@ -97,12 +103,30 @@ public class ConnectorPlugin extends Plugin {
 		}
 	}
 
-	private void postLastTickStatChanges() {
+	private void updateLastTickStatChanges() {
 		if(config.statsData()) {
 			if(!lastStatChanges.isEmpty()) {
 				StatChanges statChanges = new StatChanges(player.getName(), lastStatChanges);
-				requestHandler.execute(RequestHandler.Endpoint.STATS_CHANGE, gson.toJson(statChanges));
+				requestHandler.execute(RequestHandler.Endpoint.STAT_CHANGE, gson.toJson(statChanges));
 				lastStatChanges.clear();
+			}
+		}
+	}
+
+	private void updateQuestStates() {
+		if(config.questData()) {
+			Arrays.stream(Quest.values()).forEach(quest -> {
+				QuestChanges.Quest existingObject = questStates.getOrDefault(quest.getId(), null);
+				QuestChanges.Quest newObject = new QuestChanges.Quest(quest.getId(), quest.getName(), quest.getState(client));
+				if(existingObject == null || !existingObject.getState().equals(newObject.getState())) {
+					questStates.put(quest.getId(), newObject);
+					lastQuestStateChanges.add(newObject);
+				}
+			});
+			if(!lastQuestStateChanges.isEmpty()) {
+				requestHandler.execute(RequestHandler.Endpoint.QUEST_CHANGE, new QuestChanges(player.getName(), lastQuestStateChanges).toJson());
+				System.out.println(new QuestChanges(player.getName(), lastQuestStateChanges).toJson());
+				lastQuestStateChanges.clear();
 			}
 		}
 	}

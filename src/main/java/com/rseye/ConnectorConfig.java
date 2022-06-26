@@ -53,4 +53,14 @@ public interface ConnectorConfig extends Config {
 	default boolean statsData() {
 		return true;
 	}
+
+	@ConfigItem(
+			position = 4,
+			keyName = "Send Quest Update Data",
+			name = "Quest Update Data",
+			description = "Toggle to send/omit quest data"
+	)
+	default boolean questData() {
+		return true;
+	}
 }
