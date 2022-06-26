@@ -3,7 +3,10 @@ package com.rseye;
 import com.google.gson.Gson;
 import com.google.inject.Provides;
 import com.rseye.io.RequestHandler;
-import com.rseye.object.*;
+import com.rseye.object.Login;
+import com.rseye.object.Position;
+import com.rseye.object.QuestChanges;
+import com.rseye.object.StatChanges;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.Player;
@@ -18,7 +21,6 @@ import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 
 import javax.inject.Inject;
-import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -115,17 +117,16 @@ public class ConnectorPlugin extends Plugin {
 
 	private void updateQuestStates() {
 		if(config.questData()) {
-			Arrays.stream(Quest.values()).forEach(quest -> {
+			for(Quest quest: Quest.values()) {
 				QuestChanges.Quest existingObject = questStates.getOrDefault(quest.getId(), null);
 				QuestChanges.Quest newObject = new QuestChanges.Quest(quest.getId(), quest.getName(), quest.getState(client));
 				if(existingObject == null || !existingObject.getState().equals(newObject.getState())) {
 					questStates.put(quest.getId(), newObject);
 					lastQuestStateChanges.add(newObject);
 				}
-			});
+			}
 			if(!lastQuestStateChanges.isEmpty()) {
 				requestHandler.execute(RequestHandler.Endpoint.QUEST_CHANGE, new QuestChanges(player.getName(), lastQuestStateChanges).toJson());
-				System.out.println(new QuestChanges(player.getName(), lastQuestStateChanges).toJson());
 				lastQuestStateChanges.clear();
 			}
 		}
