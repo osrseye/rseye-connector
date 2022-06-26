@@ -10,11 +10,11 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class StatChanges extends Jsonable {
     @Getter
     @Setter
-    public String username;
+    private String username;
 
     @Getter
     @Setter
-    public CopyOnWriteArrayList<StatChanged> statsChanged;
+    private CopyOnWriteArrayList<StatChanged> statsChanged;
 
     public StatChanges(String username, CopyOnWriteArrayList<StatChanged> statsChanged) {
         this.username = username;
