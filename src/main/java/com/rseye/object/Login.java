@@ -12,10 +12,15 @@ public class Login extends Jsonable {
 
     @Getter
     @Setter
+    private int combatLevel;
+
+    @Getter
+    @Setter
     private String state;
 
-    public Login(String username, String state){
+    public Login(String username, int combatLevel, String state){
         this.username = username;
+        this.combatLevel = combatLevel;
         this.state = state;
     }
 
@@ -24,7 +29,7 @@ public class Login extends Jsonable {
         if(this == o) return true;
         if(o == null || getClass() != o.getClass()) return false;
         Login login = (Login) o;
-        return Objects.equals(state, login.state);
+        return Objects.equals(username, login.username) && Objects.equals(combatLevel, login.combatLevel) && Objects.equals(state, login.state) ;
     }
 
     @Override

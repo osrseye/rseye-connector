@@ -74,7 +74,7 @@ public class ConnectorPlugin extends Plugin {
 		if(config.loginData()) {
 			int state = gameStateChanged.getGameState().getState();
 			if(hasTicked && (state == 30 || state == 40)) {
-				Login login = new Login(player.getName(), state == 30 ? "LOGGED_IN" : "LOGGED_OUT");
+				Login login = new Login(player.getName(), player.getCombatLevel(), state == 30 ? "LOGGED_IN" : "LOGGED_OUT");
 				requestHandler.execute(RequestHandler.Endpoint.LOGIN_STATE, login.toJson());
 			}
 		}
