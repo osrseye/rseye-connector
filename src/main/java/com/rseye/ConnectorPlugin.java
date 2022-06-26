@@ -71,10 +71,12 @@ public class ConnectorPlugin extends Plugin {
 
 	@Subscribe
 	public void onGameStateChanged(GameStateChanged gameStateChanged) {
-		int state = gameStateChanged.getGameState().getState();
-		if(hasTicked && (state == 30 || state == 40)) {
-			Login login = new Login(player.getName(), state == 30 ? "LOGGED_IN" : "LOGGED_OUT");
-			requestHandler.execute(RequestHandler.Endpoint.LOGIN_STATE, login.toJson());
+		if(config.loginData()) {
+			int state = gameStateChanged.getGameState().getState();
+			if(hasTicked && (state == 30 || state == 40)) {
+				Login login = new Login(player.getName(), state == 30 ? "LOGGED_IN" : "LOGGED_OUT");
+				requestHandler.execute(RequestHandler.Endpoint.LOGIN_STATE, login.toJson());
+			}
 		}
 	}
 
@@ -84,18 +86,22 @@ public class ConnectorPlugin extends Plugin {
 	}
 
 	private void updatePlayerPosition() {
-		Position position = new Position(player.getName(), player.getWorldLocation());
-		if(!position.equals(playerLastPosition)) {
-			requestHandler.execute(RequestHandler.Endpoint.PLAYER_POSITION, position.toJson());
-			playerLastPosition = position;
+		if(config.positionData()) {
+			Position position = new Position(player.getName(), player.getWorldLocation());
+			if(!position.equals(playerLastPosition)) {
+				requestHandler.execute(RequestHandler.Endpoint.PLAYER_POSITION, position.toJson());
+				playerLastPosition = position;
+			}
 		}
 	}
 
 	private void postLastTickStatChanges() {
-		if(!lastTickStatChanges.isEmpty()) {
-			StatChanges statChanges = new StatChanges(player.getName(), lastTickStatChanges);
-			requestHandler.execute(RequestHandler.Endpoint.STATS_CHANGE, gson.toJson(statChanges));
-			lastTickStatChanges.clear();
+		if(config.statsData()) {
+			if(!lastTickStatChanges.isEmpty()) {
+				StatChanges statChanges = new StatChanges(player.getName(), lastTickStatChanges);
+				requestHandler.execute(RequestHandler.Endpoint.STATS_CHANGE, gson.toJson(statChanges));
+				lastTickStatChanges.clear();
+			}
 		}
 	}
 
