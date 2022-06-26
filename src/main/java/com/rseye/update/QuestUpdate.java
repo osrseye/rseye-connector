@@ -1,5 +1,6 @@
 package com.rseye.update;
 
+import com.rseye.util.Jsonable;
 import lombok.Getter;
 import lombok.Setter;
 import net.runelite.api.QuestState;

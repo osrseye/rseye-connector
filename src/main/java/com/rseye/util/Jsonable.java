@@ -1,4 +1,4 @@
-package com.rseye.update;
+package com.rseye.util;
 
 import com.google.gson.Gson;
 
