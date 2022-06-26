@@ -84,7 +84,7 @@ public class ConnectorPlugin extends Plugin {
 		if(config.loginData()) {
 			int state = gameStateChanged.getGameState().getState();
 			if(hasTicked && (state == 30 || state == 40)) {
-				LoginUpdate loginUpdate = new LoginUpdate(player.getName(), player.getCombatLevel(), state == 30 ? "LOGGED_IN" : "LOGGED_OUT");
+				LoginUpdate loginUpdate = new LoginUpdate(player.getName(), state == 30 ? "LOGGED_IN" : "LOGGED_OUT");
 				requestHandler.execute(RequestHandler.Endpoint.LOGIN_STATE, loginUpdate.toJson());
 			}
 		}
@@ -118,7 +118,7 @@ public class ConnectorPlugin extends Plugin {
 	private void processStatUpdate() {
 		if(config.statsData()) {
 			if(!lastStatUpdate.isEmpty()) {
-				StatUpdate statUpdate = new StatUpdate(player.getName(), lastStatUpdate);
+				StatUpdate statUpdate = new StatUpdate(player.getName(), player.getCombatLevel(), lastStatUpdate);
 				requestHandler.execute(RequestHandler.Endpoint.STAT_CHANGE, gson.toJson(statUpdate));
 				lastStatUpdate.clear();
 			}

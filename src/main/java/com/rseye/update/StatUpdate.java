@@ -15,10 +15,15 @@ public class StatUpdate extends Jsonable {
 
     @Getter
     @Setter
+    private int combatLevel;
+
+    @Getter
+    @Setter
     private CopyOnWriteArrayList<StatChanged> statsChanged;
 
-    public StatUpdate(String username, CopyOnWriteArrayList<StatChanged> statsChanged) {
+    public StatUpdate(String username, int combatLevel, CopyOnWriteArrayList<StatChanged> statsChanged) {
         this.username = username;
+        this.combatLevel = combatLevel;
         this.statsChanged = statsChanged;
     }
 
@@ -26,8 +31,8 @@ public class StatUpdate extends Jsonable {
     public boolean equals(Object o) {
         if(this == o) return true;
         if(o == null || getClass() != o.getClass()) return false;
-        StatUpdate s = (StatUpdate) o;
-        return Objects.equals(username, s.username) && Objects.equals(statsChanged, s.statsChanged);
+        StatUpdate that = (StatUpdate) o;
+        return combatLevel == that.combatLevel && Objects.equals(username, that.username) && Objects.equals(statsChanged, that.statsChanged);
     }
 
     @Override
