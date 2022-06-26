@@ -48,7 +48,7 @@ public interface ConnectorConfig extends Config {
 			position = 3,
 			keyName = "Send Stat Data",
 			name = "Stat Data",
-			description = "Toggle to send/omit level/xp/boostedLevel data"
+			description = "Toggle to send/omit level-xp-boostedLevel data"
 	)
 	default boolean statsData() {
 		return true;
@@ -71,6 +71,16 @@ public interface ConnectorConfig extends Config {
 			description = "Toggle to send/omit bank data"
 	)
 	default boolean bankData() {
+		return true;
+	}
+
+	@ConfigItem(
+			position = 6,
+			keyName = "Send Loot Data",
+			name = "Loot Data",
+			description = "Toggle to send/omit loot data"
+	)
+	default boolean lootData() {
 		return true;
 	}
 }

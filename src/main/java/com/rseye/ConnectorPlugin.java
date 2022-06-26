@@ -12,6 +12,7 @@ import net.runelite.api.events.StatChanged;
 import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.events.NpcLootReceived;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
@@ -79,7 +80,7 @@ public class ConnectorPlugin extends Plugin {
 	}
 
 	@Subscribe
-	public void onGameStateChanged(GameStateChanged gameStateChanged) {
+	public void onGameStateChanged(final GameStateChanged gameStateChanged) {
 		if(config.loginData()) {
 			int state = gameStateChanged.getGameState().getState();
 			if(hasTicked && (state == 30 || state == 40)) {
@@ -90,9 +91,17 @@ public class ConnectorPlugin extends Plugin {
 	}
 
 	@Subscribe
-	public void onStatChanged(StatChanged statChanged) {
+	public void onStatChanged(final StatChanged statChanged) {
 		if(config.statsData()) {
 			lastStatUpdate.add(statChanged);
+		}
+	}
+
+	@Subscribe
+	public void onNpcLootReceived(final NpcLootReceived npcLootReceived) {
+		if(config.lootData()) {
+			LootUpdate lootUpdate = new LootUpdate(player.getName(), npcLootReceived);
+			requestHandler.execute(RequestHandler.Endpoint.LOOT_UPDATE, lootUpdate.toJson());
 		}
 	}
 
