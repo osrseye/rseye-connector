@@ -36,8 +36,8 @@ public interface ConnectorConfig extends Config {
 
 	@ConfigItem(
 			position = 2,
-			keyName = "Send Login Update Data",
-			name = "Login Update Data",
+			keyName = "Send Login Data",
+			name = "Login Data",
 			description = "Toggle to send/omit login state data"
 	)
 	default boolean loginData() {
@@ -46,8 +46,8 @@ public interface ConnectorConfig extends Config {
 
 	@ConfigItem(
 			position = 3,
-			keyName = "Send Stats Update Data",
-			name = "Stats Update Data",
+			keyName = "Send Stat Data",
+			name = "Stat Data",
 			description = "Toggle to send/omit level/xp/boostedLevel data"
 	)
 	default boolean statsData() {
@@ -56,8 +56,8 @@ public interface ConnectorConfig extends Config {
 
 	@ConfigItem(
 			position = 4,
-			keyName = "Send Quest Update Data",
-			name = "Quest Update Data",
+			keyName = "Send Quest Data",
+			name = "Quest Data",
 			description = "Toggle to send/omit quest data"
 	)
 	default boolean questData() {
@@ -66,8 +66,8 @@ public interface ConnectorConfig extends Config {
 
 	@ConfigItem(
 			position = 5,
-			keyName = "Send Bank Update Data",
-			name = "Bank Update Data",
+			keyName = "Send Bank Data",
+			name = "Bank Data",
 			description = "Toggle to send/omit bank data"
 	)
 	default boolean bankData() {

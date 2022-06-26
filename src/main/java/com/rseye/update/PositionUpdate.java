@@ -1,4 +1,4 @@
-package com.rseye.object;
+package com.rseye.update;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -6,7 +6,7 @@ import net.runelite.api.coords.WorldPoint;
 
 import java.util.Objects;
 
-public class Position extends Jsonable {
+public class PositionUpdate extends Jsonable {
     @Getter
     @Setter
     private String username;
@@ -15,7 +15,7 @@ public class Position extends Jsonable {
     @Setter
     private WorldPoint position;
 
-    public Position(String username, WorldPoint position){
+    public PositionUpdate(String username, WorldPoint position){
         this.username = username;
         this.position = position;
     }
@@ -24,7 +24,7 @@ public class Position extends Jsonable {
     public boolean equals(Object o) {
         if(this == o) return true;
         if(o == null || getClass() != o.getClass()) return false;
-        Position p = (Position) o;
+        PositionUpdate p = (PositionUpdate) o;
         return Objects.equals(username, p.username) && Objects.equals(position, p.position);
     }
 

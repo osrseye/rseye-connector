@@ -3,7 +3,7 @@ package com.rseye;
 import com.google.gson.Gson;
 import com.google.inject.Provides;
 import com.rseye.io.RequestHandler;
-import com.rseye.object.*;
+import com.rseye.update.*;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
 import net.runelite.api.events.GameStateChanged;
@@ -38,10 +38,10 @@ public class ConnectorPlugin extends Plugin {
 	private Gson gson;
 	private boolean hasTicked;
 	private Player player;
-	private Position lastPlayerPosition;
-	private CopyOnWriteArrayList<StatChanged> lastStatChanges;
-	private CopyOnWriteArrayList<QuestChanges.Quest> lastQuestStateChanges;
-	private ConcurrentHashMap<Integer, QuestChanges.Quest> questStates;
+	private PositionUpdate lastPositionUpdate;
+	private CopyOnWriteArrayList<StatChanged> lastStatUpdate;
+	private CopyOnWriteArrayList<QuestUpdate.Quest> lastQuestStateUpdate;
+	private ConcurrentHashMap<Integer, QuestUpdate.Quest> questStates;
 	private ItemContainer lastBankState;
 	private boolean isBankOpen = false;
 
@@ -50,8 +50,8 @@ public class ConnectorPlugin extends Plugin {
 		log.info("rseye-connector started!");
 		this.requestHandler = new RequestHandler(config);
 		this.gson = new Gson();
-		this.lastStatChanges = new CopyOnWriteArrayList<>();
-		this.lastQuestStateChanges = new CopyOnWriteArrayList<>();
+		this.lastStatUpdate = new CopyOnWriteArrayList<>();
+		this.lastQuestStateUpdate = new CopyOnWriteArrayList<>();
 		this.questStates = new ConcurrentHashMap<>();
 	}
 
@@ -61,7 +61,7 @@ public class ConnectorPlugin extends Plugin {
 		this.requestHandler = null;
 		this.gson = null;
 		this.hasTicked = false;
-		this.lastStatChanges = null;
+		this.lastStatUpdate = null;
 	}
 
 	@Subscribe
@@ -69,13 +69,13 @@ public class ConnectorPlugin extends Plugin {
 		if(!hasTicked){
 			hasTicked = true;
 			player = client.getLocalPlayer();
-			lastPlayerPosition = new Position(client.getLocalPlayer().getName(), client.getLocalPlayer().getWorldLocation());
+			lastPositionUpdate = new PositionUpdate(client.getLocalPlayer().getName(), client.getLocalPlayer().getWorldLocation());
 			return;
 		}
-		updatePlayerPosition();
-		updateLastTickStatChanges(); // group together stat changes since there can be multiple per tick
-		updateQuestStates();
-		updateBank();
+		processPositionUpdate();
+		processStatUpdate(); // group together stat changes since there can be multiple per tick
+		processQuestUpdate();
+		processBankUpdate();
 	}
 
 	@Subscribe
@@ -83,8 +83,8 @@ public class ConnectorPlugin extends Plugin {
 		if(config.loginData()) {
 			int state = gameStateChanged.getGameState().getState();
 			if(hasTicked && (state == 30 || state == 40)) {
-				Login login = new Login(player.getName(), player.getCombatLevel(), state == 30 ? "LOGGED_IN" : "LOGGED_OUT");
-				requestHandler.execute(RequestHandler.Endpoint.LOGIN_STATE, login.toJson());
+				LoginUpdate loginUpdate = new LoginUpdate(player.getName(), player.getCombatLevel(), state == 30 ? "LOGGED_IN" : "LOGGED_OUT");
+				requestHandler.execute(RequestHandler.Endpoint.LOGIN_STATE, loginUpdate.toJson());
 			}
 		}
 	}
@@ -92,48 +92,48 @@ public class ConnectorPlugin extends Plugin {
 	@Subscribe
 	public void onStatChanged(StatChanged statChanged) {
 		if(config.statsData()) {
-			lastStatChanges.add(statChanged);
+			lastStatUpdate.add(statChanged);
 		}
 	}
 
-	private void updatePlayerPosition() {
+	private void processPositionUpdate() {
 		if(config.positionData()) {
-			Position position = new Position(player.getName(), player.getWorldLocation());
-			if(!position.equals(lastPlayerPosition)) {
-				requestHandler.execute(RequestHandler.Endpoint.PLAYER_POSITION, position.toJson());
-				lastPlayerPosition = position;
+			PositionUpdate positionUpdate = new PositionUpdate(player.getName(), player.getWorldLocation());
+			if(!positionUpdate.equals(lastPositionUpdate)) {
+				requestHandler.execute(RequestHandler.Endpoint.PLAYER_POSITION, positionUpdate.toJson());
+				lastPositionUpdate = positionUpdate;
 			}
 		}
 	}
 
-	private void updateLastTickStatChanges() {
+	private void processStatUpdate() {
 		if(config.statsData()) {
-			if(!lastStatChanges.isEmpty()) {
-				StatChanges statChanges = new StatChanges(player.getName(), lastStatChanges);
-				requestHandler.execute(RequestHandler.Endpoint.STAT_CHANGE, gson.toJson(statChanges));
-				lastStatChanges.clear();
+			if(!lastStatUpdate.isEmpty()) {
+				StatUpdate statUpdate = new StatUpdate(player.getName(), lastStatUpdate);
+				requestHandler.execute(RequestHandler.Endpoint.STAT_CHANGE, gson.toJson(statUpdate));
+				lastStatUpdate.clear();
 			}
 		}
 	}
 
-	private void updateQuestStates() {
+	private void processQuestUpdate() {
 		if(config.questData()) {
 			for(Quest quest: Quest.values()) {
-				QuestChanges.Quest existingObject = questStates.getOrDefault(quest.getId(), null);
-				QuestChanges.Quest newObject = new QuestChanges.Quest(quest.getId(), quest.getName(), quest.getState(client));
+				QuestUpdate.Quest existingObject = questStates.getOrDefault(quest.getId(), null);
+				QuestUpdate.Quest newObject = new QuestUpdate.Quest(quest.getId(), quest.getName(), quest.getState(client));
 				if(existingObject == null || !existingObject.getState().equals(newObject.getState())) {
 					questStates.put(quest.getId(), newObject);
-					lastQuestStateChanges.add(newObject);
+					lastQuestStateUpdate.add(newObject);
 				}
 			}
-			if(!lastQuestStateChanges.isEmpty()) {
-				requestHandler.execute(RequestHandler.Endpoint.QUEST_CHANGE, new QuestChanges(player.getName(), lastQuestStateChanges).toJson());
-				lastQuestStateChanges.clear();
+			if(!lastQuestStateUpdate.isEmpty()) {
+				requestHandler.execute(RequestHandler.Endpoint.QUEST_CHANGE, new QuestUpdate(player.getName(), lastQuestStateUpdate).toJson());
+				lastQuestStateUpdate.clear();
 			}
 		}
 	}
 
-	private void updateBank() {
+	private void processBankUpdate() {
 		if(client.getWidget(WidgetInfo.BANK_ITEM_CONTAINER) != null) {
 			isBankOpen = true;
 			lastBankState = client.getItemContainer(InventoryID.BANK);

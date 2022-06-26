@@ -1,4 +1,4 @@
-package com.rseye.object;
+package com.rseye.update;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -7,7 +7,7 @@ import net.runelite.api.QuestState;
 import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-public class QuestChanges extends Jsonable {
+public class QuestUpdate extends Jsonable {
     @Getter
     @Setter
     private String username;
@@ -16,7 +16,7 @@ public class QuestChanges extends Jsonable {
     @Setter
     private CopyOnWriteArrayList<Quest> questChanges;
 
-    public QuestChanges(String username, CopyOnWriteArrayList<Quest> questChanges) {
+    public QuestUpdate(String username, CopyOnWriteArrayList<Quest> questChanges) {
         this.username = username;
         this.questChanges = questChanges;
     }
@@ -25,7 +25,7 @@ public class QuestChanges extends Jsonable {
     public boolean equals(Object o) {
         if(this == o) return true;
         if(o == null || getClass() != o.getClass()) return false;
-        QuestChanges s = (QuestChanges) o;
+        QuestUpdate s = (QuestUpdate) o;
         return Objects.equals(username, s.username) && Objects.equals(questChanges, s.questChanges);
     }
 

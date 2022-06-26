@@ -1,11 +1,11 @@
-package com.rseye.object;
+package com.rseye.update;
 
 import lombok.Getter;
 import lombok.Setter;
 
 import java.util.Objects;
 
-public class Login extends Jsonable {
+public class LoginUpdate extends Jsonable {
     @Getter
     @Setter
     private String username;
@@ -18,7 +18,7 @@ public class Login extends Jsonable {
     @Setter
     private String state;
 
-    public Login(String username, int combatLevel, String state){
+    public LoginUpdate(String username, int combatLevel, String state){
         this.username = username;
         this.combatLevel = combatLevel;
         this.state = state;
@@ -28,8 +28,8 @@ public class Login extends Jsonable {
     public boolean equals(Object o) {
         if(this == o) return true;
         if(o == null || getClass() != o.getClass()) return false;
-        Login login = (Login) o;
-        return Objects.equals(username, login.username) && Objects.equals(combatLevel, login.combatLevel) && Objects.equals(state, login.state) ;
+        LoginUpdate loginUpdate = (LoginUpdate) o;
+        return Objects.equals(username, loginUpdate.username) && Objects.equals(combatLevel, loginUpdate.combatLevel) && Objects.equals(state, loginUpdate.state) ;
     }
 
     @Override

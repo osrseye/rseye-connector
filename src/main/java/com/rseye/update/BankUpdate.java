@@ -1,4 +1,4 @@
-package com.rseye.object;
+package com.rseye.update;
 
 import lombok.Getter;
 import lombok.Setter;
