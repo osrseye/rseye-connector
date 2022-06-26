@@ -6,7 +6,7 @@ import net.runelite.api.coords.WorldPoint;
 
 import java.util.Objects;
 
-public class Position {
+public class Position extends Jsonable {
     @Getter
     @Setter
     private String username;

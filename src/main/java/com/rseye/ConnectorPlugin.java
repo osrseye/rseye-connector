@@ -62,7 +62,7 @@ public class ConnectorPlugin extends Plugin {
 		Player player = client.getLocalPlayer();
 		Position position = new Position(player.getName(), player.getWorldLocation());
 		if(!position.equals(playerLastPosition)) {
-			requestHandler.execute(RequestHandler.Endpoint.PLAYER_POSITION, gson.toJson(position));
+			requestHandler.execute(RequestHandler.Endpoint.PLAYER_POSITION, position.toJson());
 			playerLastPosition = position;
 		}
 	}
