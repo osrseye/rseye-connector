@@ -3,11 +3,15 @@ package com.rseye;
 import com.google.gson.Gson;
 import com.google.inject.Provides;
 import com.rseye.io.RequestHandler;
+import com.rseye.object.Login;
 import com.rseye.object.Position;
+import com.rseye.object.StatChanges;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.Player;
+import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
+import net.runelite.api.events.StatChanged;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.game.ItemManager;
@@ -15,6 +19,7 @@ import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 
 import javax.inject.Inject;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @Slf4j
 @PluginDescriptor(name = "rseye-connector")
@@ -31,13 +36,16 @@ public class ConnectorPlugin extends Plugin {
 	private RequestHandler requestHandler;
 	private Gson gson;
 	private boolean hasTicked;
+	private Player player;
 	private Position playerLastPosition;
+	private CopyOnWriteArrayList<StatChanged> lastTickStatChanges;
 
 	@Override
 	protected void startUp() throws Exception {
 		log.info("rseye-connector started!");
 		this.requestHandler = new RequestHandler(config);
 		this.gson = new Gson();
+		this.lastTickStatChanges = new CopyOnWriteArrayList<>();
 	}
 
 	@Override
@@ -46,24 +54,48 @@ public class ConnectorPlugin extends Plugin {
 		this.requestHandler = null;
 		this.gson = null;
 		this.hasTicked = false;
+		this.lastTickStatChanges = null;
 	}
 
 	@Subscribe
 	public void onGameTick(final GameTick event) {
 		if(!hasTicked){
 			hasTicked = true;
+			player = client.getLocalPlayer();
 			playerLastPosition = new Position(client.getLocalPlayer().getName(), client.getLocalPlayer().getWorldLocation());
 			return;
 		}
 		updatePlayerPosition();
+		postLastTickStatChanges(); // group together stat changes since there can be multiple per tick
 	}
 
-	public void updatePlayerPosition() {
-		Player player = client.getLocalPlayer();
+	@Subscribe
+	public void onGameStateChanged(GameStateChanged gameStateChanged) {
+		int state = gameStateChanged.getGameState().getState();
+		if(hasTicked && (state == 30 || state == 40)) {
+			Login login = new Login(player.getName(), state == 30 ? "LOGGED_IN" : "LOGGED_OUT");
+			requestHandler.execute(RequestHandler.Endpoint.LOGIN_STATE, login.toJson());
+		}
+	}
+
+	@Subscribe
+	public void onStatChanged(StatChanged statChanged) {
+		lastTickStatChanges.add(statChanged);
+	}
+
+	private void updatePlayerPosition() {
 		Position position = new Position(player.getName(), player.getWorldLocation());
 		if(!position.equals(playerLastPosition)) {
 			requestHandler.execute(RequestHandler.Endpoint.PLAYER_POSITION, position.toJson());
 			playerLastPosition = position;
+		}
+	}
+
+	private void postLastTickStatChanges() {
+		if(!lastTickStatChanges.isEmpty()) {
+			StatChanges statChanges = new StatChanges(player.getName(), lastTickStatChanges);
+			requestHandler.execute(RequestHandler.Endpoint.STATS_CHANGE, gson.toJson(statChanges));
+			lastTickStatChanges.clear();
 		}
 	}
 

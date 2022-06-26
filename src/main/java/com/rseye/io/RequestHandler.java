@@ -44,7 +44,9 @@ public class RequestHandler {
     }
 
     public enum Endpoint {
-        PLAYER_POSITION("position/");
+        PLAYER_POSITION("player_position/"),
+        LOGIN_STATE("login_state/"),
+        STATS_CHANGE("stats_change/");
 
         public final String location;
         Endpoint(String location) {

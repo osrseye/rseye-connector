@@ -33,4 +33,24 @@ public interface ConnectorConfig extends Config {
 	default boolean positionData() {
 		return true;
 	}
+
+	@ConfigItem(
+			position = 2,
+			keyName = "Send Login Update Data",
+			name = "Login Update Data",
+			description = "Toggle to send/omit login state data"
+	)
+	default boolean loginData() {
+		return true;
+	}
+
+	@ConfigItem(
+			position = 3,
+			keyName = "Send Stats Update Data",
+			name = "Stats Update Data",
+			description = "Toggle to send/omit level/xp/boostedLevel data"
+	)
+	default boolean statsData() {
+		return true;
+	}
 }
