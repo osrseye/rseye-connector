@@ -38,14 +38,14 @@ public class ConnectorPlugin extends Plugin {
 	private boolean hasTicked;
 	private Player player;
 	private Position playerLastPosition;
-	private CopyOnWriteArrayList<StatChanged> lastTickStatChanges;
+	private CopyOnWriteArrayList<StatChanged> lastStatChanges;
 
 	@Override
 	protected void startUp() throws Exception {
 		log.info("rseye-connector started!");
 		this.requestHandler = new RequestHandler(config);
 		this.gson = new Gson();
-		this.lastTickStatChanges = new CopyOnWriteArrayList<>();
+		this.lastStatChanges = new CopyOnWriteArrayList<>();
 	}
 
 	@Override
@@ -54,7 +54,7 @@ public class ConnectorPlugin extends Plugin {
 		this.requestHandler = null;
 		this.gson = null;
 		this.hasTicked = false;
-		this.lastTickStatChanges = null;
+		this.lastStatChanges = null;
 	}
 
 	@Subscribe
@@ -83,7 +83,7 @@ public class ConnectorPlugin extends Plugin {
 	@Subscribe
 	public void onStatChanged(StatChanged statChanged) {
 		if(config.statsData()) {
-			lastTickStatChanges.add(statChanged);
+			lastStatChanges.add(statChanged);
 		}
 	}
 
@@ -99,10 +99,10 @@ public class ConnectorPlugin extends Plugin {
 
 	private void postLastTickStatChanges() {
 		if(config.statsData()) {
-			if(!lastTickStatChanges.isEmpty()) {
-				StatChanges statChanges = new StatChanges(player.getName(), lastTickStatChanges);
+			if(!lastStatChanges.isEmpty()) {
+				StatChanges statChanges = new StatChanges(player.getName(), lastStatChanges);
 				requestHandler.execute(RequestHandler.Endpoint.STATS_CHANGE, gson.toJson(statChanges));
-				lastTickStatChanges.clear();
+				lastStatChanges.clear();
 			}
 		}
 	}
