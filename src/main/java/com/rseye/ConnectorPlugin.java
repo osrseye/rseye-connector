@@ -37,7 +37,7 @@ public class ConnectorPlugin extends Plugin {
 	private Gson gson;
 	private boolean hasTicked;
 	private Player player;
-	private Position playerLastPosition;
+	private Position lastPlayerPosition;
 	private CopyOnWriteArrayList<StatChanged> lastStatChanges;
 
 	@Override
@@ -62,7 +62,7 @@ public class ConnectorPlugin extends Plugin {
 		if(!hasTicked){
 			hasTicked = true;
 			player = client.getLocalPlayer();
-			playerLastPosition = new Position(client.getLocalPlayer().getName(), client.getLocalPlayer().getWorldLocation());
+			lastPlayerPosition = new Position(client.getLocalPlayer().getName(), client.getLocalPlayer().getWorldLocation());
 			return;
 		}
 		updatePlayerPosition();
@@ -90,9 +90,9 @@ public class ConnectorPlugin extends Plugin {
 	private void updatePlayerPosition() {
 		if(config.positionData()) {
 			Position position = new Position(player.getName(), player.getWorldLocation());
-			if(!position.equals(playerLastPosition)) {
+			if(!position.equals(lastPlayerPosition)) {
 				requestHandler.execute(RequestHandler.Endpoint.PLAYER_POSITION, position.toJson());
-				playerLastPosition = position;
+				lastPlayerPosition = position;
 			}
 		}
 	}
