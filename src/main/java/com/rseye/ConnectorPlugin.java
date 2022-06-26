@@ -82,7 +82,9 @@ public class ConnectorPlugin extends Plugin {
 
 	@Subscribe
 	public void onStatChanged(StatChanged statChanged) {
-		lastTickStatChanges.add(statChanged);
+		if(config.statsData()) {
+			lastTickStatChanges.add(statChanged);
+		}
 	}
 
 	private void updatePlayerPosition() {
