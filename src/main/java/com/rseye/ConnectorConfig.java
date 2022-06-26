@@ -63,4 +63,14 @@ public interface ConnectorConfig extends Config {
 	default boolean questData() {
 		return true;
 	}
+
+	@ConfigItem(
+			position = 5,
+			keyName = "Send Bank Update Data",
+			name = "Bank Update Data",
+			description = "Toggle to send/omit bank data"
+	)
+	default boolean bankData() {
+		return true;
+	}
 }

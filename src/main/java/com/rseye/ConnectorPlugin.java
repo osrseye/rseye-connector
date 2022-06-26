@@ -3,17 +3,13 @@ package com.rseye;
 import com.google.gson.Gson;
 import com.google.inject.Provides;
 import com.rseye.io.RequestHandler;
-import com.rseye.object.Login;
-import com.rseye.object.Position;
-import com.rseye.object.QuestChanges;
-import com.rseye.object.StatChanges;
+import com.rseye.object.*;
 import lombok.extern.slf4j.Slf4j;
-import net.runelite.api.Client;
-import net.runelite.api.Player;
-import net.runelite.api.Quest;
+import net.runelite.api.*;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.StatChanged;
+import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.game.ItemManager;
@@ -21,6 +17,8 @@ import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 
 import javax.inject.Inject;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -44,6 +42,8 @@ public class ConnectorPlugin extends Plugin {
 	private CopyOnWriteArrayList<StatChanged> lastStatChanges;
 	private CopyOnWriteArrayList<QuestChanges.Quest> lastQuestStateChanges;
 	private ConcurrentHashMap<Integer, QuestChanges.Quest> questStates;
+	private ItemContainer lastBankState;
+	private boolean isBankOpen = false;
 
 	@Override
 	protected void startUp() throws Exception {
@@ -75,6 +75,7 @@ public class ConnectorPlugin extends Plugin {
 		updatePlayerPosition();
 		updateLastTickStatChanges(); // group together stat changes since there can be multiple per tick
 		updateQuestStates();
+		updateBank();
 	}
 
 	@Subscribe
@@ -129,6 +130,20 @@ public class ConnectorPlugin extends Plugin {
 				requestHandler.execute(RequestHandler.Endpoint.QUEST_CHANGE, new QuestChanges(player.getName(), lastQuestStateChanges).toJson());
 				lastQuestStateChanges.clear();
 			}
+		}
+	}
+
+	private void updateBank() {
+		if(client.getWidget(WidgetInfo.BANK_ITEM_CONTAINER) != null) {
+			isBankOpen = true;
+			lastBankState = client.getItemContainer(InventoryID.BANK);
+			return;
+		}
+		if(isBankOpen && lastBankState != null) {
+			isBankOpen = false;
+			List<Item> items = Arrays.asList(lastBankState.getItems());
+			System.out.println(new BankUpdate(player.getName(), items).toJson());
+			requestHandler.execute(RequestHandler.Endpoint.BANK_UPDATE, new BankUpdate(player.getName(), items).toJson());
 		}
 	}
 

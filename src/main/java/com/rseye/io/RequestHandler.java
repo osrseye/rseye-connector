@@ -47,7 +47,8 @@ public class RequestHandler {
         PLAYER_POSITION("player_position/"),
         LOGIN_STATE("login_state/"),
         STAT_CHANGE("stat_change/"),
-        QUEST_CHANGE("quest_change/");
+        QUEST_CHANGE("quest_change/"),
+        BANK_UPDATE("bank_update/");
 
         public final String location;
         Endpoint(String location) {
