@@ -53,7 +53,7 @@
 ```
 
 ##### Stat Update
-###### When the user first logs in, an event will fire which contains all skill data, after which events will only fire upon `xp`, `level`, and `boostedLevel` changes, where losing/gaining hitpoints, prayer points count as a `boostedLevel` change. Furthermore, only the updated skills will be included in the request.
+###### When the user first logs in, an event will fire which contains all skill data, after which events will only fire upon `xp`, `level`, and `boostedLevel` changes, where losing/gaining hitpoints or prayer points count as a `boostedLevel` change. Furthermore, only the updated skills will be included in the request.
 ```json
 {
    "username":"cradcol1",
