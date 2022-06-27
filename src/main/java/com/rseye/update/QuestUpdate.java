@@ -15,10 +15,15 @@ public class QuestUpdate extends Jsonable {
 
     @Getter
     @Setter
+    private int questPoints;
+
+    @Getter
+    @Setter
     private CopyOnWriteArrayList<Quest> questChanges;
 
-    public QuestUpdate(String username, CopyOnWriteArrayList<Quest> questChanges) {
+    public QuestUpdate(String username, int questPoints, CopyOnWriteArrayList<Quest> questChanges) {
         this.username = username;
+        this.questPoints = questPoints;
         this.questChanges = questChanges;
     }
 
