@@ -44,10 +44,10 @@ public class RequestHandler {
     }
 
     public enum Endpoint {
-        PLAYER_POSITION("player_position/"),
-        LOGIN_STATE("login_state/"),
-        STAT_CHANGE("stat_change/"),
-        QUEST_CHANGE("quest_change/"),
+        POSITION_UPDATE("position_update/"),
+        LOGIN_UPDATE("login_update/"),
+        STAT_UPDATE("stat_update/"),
+        QUEST_UPDATE("quest_update/"),
         BANK_UPDATE("bank_update/"),
         LOOT_UPDATE("loot_update/"),
         INVENTORY_UPDATE("inventory_update/"),

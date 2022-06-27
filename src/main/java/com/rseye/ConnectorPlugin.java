@@ -90,7 +90,7 @@ public class ConnectorPlugin extends Plugin {
 			int state = gameStateChanged.getGameState().getState();
 			if(hasTicked && (state == 30 || state == 40)) {
 				LoginUpdate loginUpdate = new LoginUpdate(player.getName(), state == 30 ? "LOGGED_IN" : "LOGGED_OUT");
-				requestHandler.execute(RequestHandler.Endpoint.LOGIN_STATE, loginUpdate.toJson());
+				requestHandler.execute(RequestHandler.Endpoint.LOGIN_UPDATE, loginUpdate.toJson());
 			}
 		}
 	}
@@ -172,7 +172,7 @@ public class ConnectorPlugin extends Plugin {
 		if(config.positionData()) {
 			PositionUpdate positionUpdate = new PositionUpdate(player.getName(), player.getWorldLocation());
 			if(!positionUpdate.equals(lastPositionUpdate)) {
-				requestHandler.execute(RequestHandler.Endpoint.PLAYER_POSITION, positionUpdate.toJson());
+				requestHandler.execute(RequestHandler.Endpoint.POSITION_UPDATE, positionUpdate.toJson());
 				lastPositionUpdate = positionUpdate;
 			}
 		}
@@ -182,7 +182,7 @@ public class ConnectorPlugin extends Plugin {
 		if(config.statsData()) {
 			if(!lastStatUpdate.isEmpty()) {
 				StatUpdate statUpdate = new StatUpdate(player.getName(), player.getCombatLevel(), lastStatUpdate);
-				requestHandler.execute(RequestHandler.Endpoint.STAT_CHANGE, gson.toJson(statUpdate));
+				requestHandler.execute(RequestHandler.Endpoint.STAT_UPDATE, gson.toJson(statUpdate));
 				lastStatUpdate.clear();
 			}
 		}
@@ -199,7 +199,7 @@ public class ConnectorPlugin extends Plugin {
 				}
 			}
 			if(!lastQuestStateUpdate.isEmpty()) {
-				requestHandler.execute(RequestHandler.Endpoint.QUEST_CHANGE, new QuestUpdate(player.getName(), lastQuestStateUpdate).toJson());
+				requestHandler.execute(RequestHandler.Endpoint.QUEST_UPDATE, new QuestUpdate(player.getName(), lastQuestStateUpdate).toJson());
 				lastQuestStateUpdate.clear();
 			}
 		}
