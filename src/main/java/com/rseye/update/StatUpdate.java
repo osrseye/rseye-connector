@@ -19,12 +19,12 @@ public class StatUpdate extends Jsonable {
 
     @Getter
     @Setter
-    private CopyOnWriteArrayList<StatChanged> statsChanged;
+    private CopyOnWriteArrayList<StatChanged> statChanges;
 
-    public StatUpdate(String username, int combatLevel, CopyOnWriteArrayList<StatChanged> statsChanged) {
+    public StatUpdate(String username, int combatLevel, CopyOnWriteArrayList<StatChanged> statChanges) {
         this.username = username;
         this.combatLevel = combatLevel;
-        this.statsChanged = statsChanged;
+        this.statChanges = statChanges;
     }
 
     @Override
@@ -32,11 +32,11 @@ public class StatUpdate extends Jsonable {
         if(this == o) return true;
         if(o == null || getClass() != o.getClass()) return false;
         StatUpdate that = (StatUpdate) o;
-        return combatLevel == that.combatLevel && Objects.equals(username, that.username) && Objects.equals(statsChanged, that.statsChanged);
+        return combatLevel == that.combatLevel && Objects.equals(username, that.username) && Objects.equals(statChanges, that.statChanges);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(username, statsChanged);
+        return Objects.hash(username, statChanges);
     }
 }
