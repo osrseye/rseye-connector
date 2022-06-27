@@ -46,8 +46,6 @@ public class ConnectorPlugin extends Plugin {
 	private CopyOnWriteArrayList<QuestUpdate.Quest> lastQuestStateUpdate;
 	private ConcurrentHashMap<Integer, QuestUpdate.Quest> questStates;
 	private ItemContainer lastBankState;
-	private List<Item> lastInventoryState;
-	private List<Item> lastEquipmentState;
 	private boolean isBankOpen = false;
 
 	@Override
@@ -107,55 +105,13 @@ public class ConnectorPlugin extends Plugin {
 	public void onItemContainerChanged(final ItemContainerChanged itemContainerChanged) {
 		if(player == null) return;
 
-		if(config.inventoryData()) {
-			if(itemContainerChanged.getItemContainer() == client.getItemContainer(InventoryID.INVENTORY)) {
-				List<Item> items = Arrays.asList(itemContainerChanged.getItemContainer().getItems());
-				if(lastInventoryState == null) {
-					lastInventoryState = items;
-					requestHandler.execute(RequestHandler.Endpoint.INVENTORY_UPDATE, new InventoryUpdate(player.getName(), items).toJson());
-					return;
-				}
-
-				if(!lastInventoryState.equals(items)) {
-					lastInventoryState = items;
-					requestHandler.execute(RequestHandler.Endpoint.INVENTORY_UPDATE, new InventoryUpdate(player.getName(), items).toJson());
-					return;
-				}
-			}
+		// process inventory
+		if(itemContainerChanged.getItemContainer() == client.getItemContainer(InventoryID.INVENTORY)) {
+			processInventoryUpdate(itemContainerChanged);
 		}
-
-		if(config.equipmentData()) {
-			if(itemContainerChanged.getItemContainer() == client.getItemContainer(InventoryID.EQUIPMENT)) {
-				List<Item> items = Arrays.asList(itemContainerChanged.getItemContainer().getItems());
-				HashMap<EquipmentInventorySlot, Item> equipped = new HashMap<>();
-
-				if(lastEquipmentState == null) {
-					lastEquipmentState = items;
-					for(EquipmentInventorySlot equipmentInventorySlot : EquipmentInventorySlot.values()) {
-						if(equipmentInventorySlot.getSlotIdx() < items.size()) {
-							Item item = items.get(equipmentInventorySlot.getSlotIdx());
-							if(item.getId() > -1) {
-								equipped.put(equipmentInventorySlot, item);
-							}
-						}
-					}
-					requestHandler.execute(RequestHandler.Endpoint.EQUIPMENT_UPDATE, new EquipmentUpdate(player.getName(), equipped).toJson());
-					return;
-				}
-
-				if(!lastEquipmentState.equals(items)) {
-					for(EquipmentInventorySlot equipmentInventorySlot : EquipmentInventorySlot.values()) {
-						if(equipmentInventorySlot.getSlotIdx() < items.size()) {
-							Item item = items.get(equipmentInventorySlot.getSlotIdx());
-							if(item.getId() > -1) {
-								equipped.put(equipmentInventorySlot, item);
-							}
-						}
-					}
-					requestHandler.execute(RequestHandler.Endpoint.EQUIPMENT_UPDATE, new EquipmentUpdate(player.getName(), equipped).toJson());
-					return;
-				}
-			}
+		// process equipment
+		if(itemContainerChanged.getItemContainer() == client.getItemContainer(InventoryID.EQUIPMENT)) {
+			processEquipmentUpdate(itemContainerChanged);
 		}
 	}
 
@@ -182,7 +138,7 @@ public class ConnectorPlugin extends Plugin {
 		if(config.statsData()) {
 			if(!lastStatUpdate.isEmpty()) {
 				StatUpdate statUpdate = new StatUpdate(player.getName(), player.getCombatLevel(), lastStatUpdate);
-				requestHandler.execute(RequestHandler.Endpoint.STAT_UPDATE, gson.toJson(statUpdate));
+				requestHandler.execute(RequestHandler.Endpoint.STAT_UPDATE, statUpdate.toJson());
 				lastStatUpdate.clear();
 			}
 		}
@@ -199,7 +155,8 @@ public class ConnectorPlugin extends Plugin {
 				}
 			}
 			if(!lastQuestStateUpdate.isEmpty()) {
-				requestHandler.execute(RequestHandler.Endpoint.QUEST_UPDATE, new QuestUpdate(player.getName(), client.getVar(VarPlayer.QUEST_POINTS), lastQuestStateUpdate).toJson());
+				QuestUpdate questUpdate = new QuestUpdate(player.getName(), client.getVar(VarPlayer.QUEST_POINTS), lastQuestStateUpdate);
+				requestHandler.execute(RequestHandler.Endpoint.QUEST_UPDATE, questUpdate.toJson());
 				lastQuestStateUpdate.clear();
 			}
 		}
@@ -215,8 +172,36 @@ public class ConnectorPlugin extends Plugin {
 			if(isBankOpen && lastBankState != null) {
 				isBankOpen = false;
 				List<Item> items = Arrays.asList(lastBankState.getItems());
-				requestHandler.execute(RequestHandler.Endpoint.BANK_UPDATE, new BankUpdate(player.getName(), items).toJson());
+				BankUpdate bankUpdate = new BankUpdate(player.getName(), items);
+				requestHandler.execute(RequestHandler.Endpoint.BANK_UPDATE, bankUpdate.toJson());
 			}
+		}
+	}
+
+	private void processInventoryUpdate(ItemContainerChanged icc) {
+		if(config.inventoryData()) {
+			List<Item> items = Arrays.asList(icc.getItemContainer().getItems());
+			InventoryUpdate inventoryUpdate = new InventoryUpdate(player.getName(), items);
+			requestHandler.execute(RequestHandler.Endpoint.INVENTORY_UPDATE, inventoryUpdate.toJson());
+		}
+	}
+
+	private void processEquipmentUpdate(ItemContainerChanged icc) {
+		if(config.equipmentData()) {
+			List<Item> items = Arrays.asList(icc.getItemContainer().getItems());
+			HashMap<EquipmentInventorySlot, Item> equipped = new HashMap<>();
+
+			for(EquipmentInventorySlot equipmentInventorySlot : EquipmentInventorySlot.values()) {
+				if(equipmentInventorySlot.getSlotIdx() < items.size()) {
+					Item item = items.get(equipmentInventorySlot.getSlotIdx());
+					if(item.getId() > -1 && item.getQuantity() > 0) {
+						equipped.put(equipmentInventorySlot, item);
+					}
+				}
+			}
+
+			EquipmentUpdate equipmentUpdate = new EquipmentUpdate(player.getName(), equipped);
+			requestHandler.execute(RequestHandler.Endpoint.EQUIPMENT_UPDATE, equipmentUpdate.toJson());
 		}
 	}
 
