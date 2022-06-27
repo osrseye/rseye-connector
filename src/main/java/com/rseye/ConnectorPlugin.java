@@ -206,15 +206,17 @@ public class ConnectorPlugin extends Plugin {
 	}
 
 	private void processBankUpdate() {
-		if(client.getWidget(WidgetInfo.BANK_ITEM_CONTAINER) != null) {
-			isBankOpen = true;
-			lastBankState = client.getItemContainer(InventoryID.BANK);
-			return;
-		}
-		if(isBankOpen && lastBankState != null) {
-			isBankOpen = false;
-			List<Item> items = Arrays.asList(lastBankState.getItems());
-			requestHandler.execute(RequestHandler.Endpoint.BANK_UPDATE, new BankUpdate(player.getName(), items).toJson());
+		if(config.bankData()) {
+			if(client.getWidget(WidgetInfo.BANK_ITEM_CONTAINER) != null) {
+				isBankOpen = true;
+				lastBankState = client.getItemContainer(InventoryID.BANK);
+				return;
+			}
+			if(isBankOpen && lastBankState != null) {
+				isBankOpen = false;
+				List<Item> items = Arrays.asList(lastBankState.getItems());
+				requestHandler.execute(RequestHandler.Endpoint.BANK_UPDATE, new BankUpdate(player.getName(), items).toJson());
+			}
 		}
 	}
 
