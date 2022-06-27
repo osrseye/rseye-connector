@@ -69,10 +69,9 @@ public class ConnectorPlugin extends Plugin {
 
 	@Subscribe
 	public void onGameTick(final GameTick gameTick) {
-		if(!hasTicked){
+		if(!hasTicked || player == null){
 			hasTicked = true;
 			player = client.getLocalPlayer();
-			lastPositionUpdate = new PositionUpdate(client.getLocalPlayer().getName(), client.getLocalPlayer().getWorldLocation());
 			return;
 		}
 		processPositionUpdate();
@@ -83,11 +82,16 @@ public class ConnectorPlugin extends Plugin {
 
 	@Subscribe
 	public void onGameStateChanged(final GameStateChanged gameStateChanged) {
+		if(gameStateChanged.getGameState() != GameState.LOGGED_IN) {
+			// necessary step to refresh the local player object
+			hasTicked = false;
+		}
+
 		if(player == null) return;
 		if(config.loginData()) {
-			int state = gameStateChanged.getGameState().getState();
-			if(hasTicked && (state == 30 || state == 40)) {
-				LoginUpdate loginUpdate = new LoginUpdate(player.getName(), state == 30 ? "LOGGED_IN" : "LOGGED_OUT");
+			GameState state = gameStateChanged.getGameState();
+			if(hasTicked && (state == GameState.LOGGED_IN || state == GameState.CONNECTION_LOST)) {
+				LoginUpdate loginUpdate = new LoginUpdate(player.getName(), state == GameState.LOGGED_IN ? "LOGGED_IN" : "LOGGED_OUT");
 				requestHandler.execute(RequestHandler.Endpoint.LOGIN_UPDATE, loginUpdate.toJson());
 			}
 		}
