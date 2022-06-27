@@ -49,7 +49,9 @@ public class RequestHandler {
         STAT_CHANGE("stat_change/"),
         QUEST_CHANGE("quest_change/"),
         BANK_UPDATE("bank_update/"),
-        LOOT_UPDATE("loot_update/");
+        LOOT_UPDATE("loot_update/"),
+        INVENTORY_UPDATE("inventory_update/"),
+        EQUIPMENT_UPDATE("equipment_update/");
 
         public final String location;
         Endpoint(String location) {

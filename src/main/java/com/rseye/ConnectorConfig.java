@@ -83,4 +83,24 @@ public interface ConnectorConfig extends Config {
 	default boolean lootData() {
 		return true;
 	}
+
+	@ConfigItem(
+			position = 7,
+			keyName = "Send Inventory Data",
+			name = "Inventory Data",
+			description = "Toggle to send/omit inventory data"
+	)
+	default boolean inventoryData() {
+		return true;
+	}
+
+	@ConfigItem(
+			position = 8,
+			keyName = "Send Equipment Data",
+			name = "Equipment Data",
+			description = "Toggle to send/omit equipment data"
+	)
+	default boolean equipmentData() {
+		return true;
+	}
 }

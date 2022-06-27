@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
+import net.runelite.api.events.ItemContainerChanged;
 import net.runelite.api.events.StatChanged;
 import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.config.ConfigManager;
@@ -19,6 +20,7 @@ import net.runelite.client.plugins.PluginDescriptor;
 
 import javax.inject.Inject;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -44,6 +46,8 @@ public class ConnectorPlugin extends Plugin {
 	private CopyOnWriteArrayList<QuestUpdate.Quest> lastQuestStateUpdate;
 	private ConcurrentHashMap<Integer, QuestUpdate.Quest> questStates;
 	private ItemContainer lastBankState;
+	private List<Item> lastInventoryState;
+	private List<Item> lastEquipmentState;
 	private boolean isBankOpen = false;
 
 	@Override
@@ -66,7 +70,7 @@ public class ConnectorPlugin extends Plugin {
 	}
 
 	@Subscribe
-	public void onGameTick(final GameTick event) {
+	public void onGameTick(final GameTick gameTick) {
 		if(!hasTicked){
 			hasTicked = true;
 			player = client.getLocalPlayer();
@@ -81,6 +85,7 @@ public class ConnectorPlugin extends Plugin {
 
 	@Subscribe
 	public void onGameStateChanged(final GameStateChanged gameStateChanged) {
+		if(player == null) return;
 		if(config.loginData()) {
 			int state = gameStateChanged.getGameState().getState();
 			if(hasTicked && (state == 30 || state == 40)) {
@@ -92,13 +97,71 @@ public class ConnectorPlugin extends Plugin {
 
 	@Subscribe
 	public void onStatChanged(final StatChanged statChanged) {
+		// no player null check needed since the events are batched and sent after tick 0
 		if(config.statsData()) {
 			lastStatUpdate.add(statChanged);
 		}
 	}
 
 	@Subscribe
+	public void onItemContainerChanged(final ItemContainerChanged itemContainerChanged) {
+		if(player == null) return;
+
+		if(config.inventoryData()) {
+			if(itemContainerChanged.getItemContainer() == client.getItemContainer(InventoryID.INVENTORY)) {
+				List<Item> items = Arrays.asList(itemContainerChanged.getItemContainer().getItems());
+				if(lastInventoryState == null) {
+					lastInventoryState = items;
+					requestHandler.execute(RequestHandler.Endpoint.INVENTORY_UPDATE, new InventoryUpdate(player.getName(), items).toJson());
+					return;
+				}
+
+				if(!lastInventoryState.equals(items)) {
+					lastInventoryState = items;
+					requestHandler.execute(RequestHandler.Endpoint.INVENTORY_UPDATE, new InventoryUpdate(player.getName(), items).toJson());
+					return;
+				}
+			}
+		}
+
+		if(config.equipmentData()) {
+			if(itemContainerChanged.getItemContainer() == client.getItemContainer(InventoryID.EQUIPMENT)) {
+				List<Item> items = Arrays.asList(itemContainerChanged.getItemContainer().getItems());
+				HashMap<EquipmentInventorySlot, Item> equipped = new HashMap<>();
+
+				if(lastEquipmentState == null) {
+					lastEquipmentState = items;
+					for(EquipmentInventorySlot equipmentInventorySlot : EquipmentInventorySlot.values()) {
+						if(equipmentInventorySlot.getSlotIdx() < items.size()) {
+							Item item = items.get(equipmentInventorySlot.getSlotIdx());
+							if(item.getId() > -1) {
+								equipped.put(equipmentInventorySlot, item);
+							}
+						}
+					}
+					requestHandler.execute(RequestHandler.Endpoint.EQUIPMENT_UPDATE, new EquipmentUpdate(player.getName(), equipped).toJson());
+					return;
+				}
+
+				if(!lastEquipmentState.equals(items)) {
+					for(EquipmentInventorySlot equipmentInventorySlot : EquipmentInventorySlot.values()) {
+						if(equipmentInventorySlot.getSlotIdx() < items.size()) {
+							Item item = items.get(equipmentInventorySlot.getSlotIdx());
+							if(item.getId() > -1) {
+								equipped.put(equipmentInventorySlot, item);
+							}
+						}
+					}
+					requestHandler.execute(RequestHandler.Endpoint.EQUIPMENT_UPDATE, new EquipmentUpdate(player.getName(), equipped).toJson());
+					return;
+				}
+			}
+		}
+	}
+
+	@Subscribe
 	public void onNpcLootReceived(final NpcLootReceived npcLootReceived) {
+		if(player == null) return;
 		if(config.lootData()) {
 			LootUpdate lootUpdate = new LootUpdate(player.getName(), npcLootReceived);
 			requestHandler.execute(RequestHandler.Endpoint.LOOT_UPDATE, lootUpdate.toJson());
@@ -151,7 +214,6 @@ public class ConnectorPlugin extends Plugin {
 		if(isBankOpen && lastBankState != null) {
 			isBankOpen = false;
 			List<Item> items = Arrays.asList(lastBankState.getItems());
-			System.out.println(new BankUpdate(player.getName(), items).toJson());
 			requestHandler.execute(RequestHandler.Endpoint.BANK_UPDATE, new BankUpdate(player.getName(), items).toJson());
 		}
 	}
