@@ -38,6 +38,7 @@ public class ConnectorPlugin extends Plugin {
 
 	private RequestHandler requestHandler;
 	private boolean hasTicked;
+	private int ticks = 0;
 	private Player player;
 	private PositionUpdate lastPositionUpdate;
 	private CopyOnWriteArrayList<StatChanged> lastStatUpdate;
@@ -60,6 +61,7 @@ public class ConnectorPlugin extends Plugin {
 		log.info("rseye-connector stopped!");
 		this.requestHandler = null;
 		this.hasTicked = false;
+		this.ticks = 0;
 		this.lastStatUpdate = null;
 		this.lastQuestStateUpdate = null;
 		this.questStates = null;
@@ -69,14 +71,23 @@ public class ConnectorPlugin extends Plugin {
 	public void onGameTick(final GameTick gameTick) {
 		if(!hasTicked || player == null){
 			hasTicked = true;
+			ticks = 0;
 			player = client.getLocalPlayer();
 			questStates = new ConcurrentHashMap<>(); // re-init quest states else the initial quest data will only ever be sent once, unlike other similar events which fire every time a "LOGGED_IN" event occurs
 			return;
 		}
-		processPositionUpdate();
+
+		if(ticks % config.positionDataFrequency() == 0) {
+			log.debug("Processing position update on tick {}", ticks);
+			processPositionUpdate();
+		}
+
 		processStatUpdate(); // group together stat changes since there can be multiple per tick
 		processQuestUpdate();
 		processBankUpdate();
+
+		ticks++;
+		ticks = ticks > 144000 ? 0 : ticks; // reset tick count after 24 hours - otherwise we'll run into an int overflow in roughly 45 years.
 	}
 
 	@Subscribe
