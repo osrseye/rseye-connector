@@ -4,8 +4,11 @@
 
 ## Configuration
 
+#### Endpoint Configuration
 - `Endpoint` address which HTTP POST requests will be sent
 - `bearerToken` used to verify identity of the sender
+
+#### Data Toggles
 - `Position Data` if player position data can be sent
 - `Login Data` if player login state data can be sent (logged in/logged out)
 - `Stat Data` if player stat data can be sent
@@ -14,6 +17,9 @@
 - `Loot Data` if loot data from npc kills can be sent
 - `Inventory Data` if player inventory data can be sent
 - `Equipment Data` if player equipped item data can be sent
+
+#### Data Frequency
+- `Position Data` how often in ticks position data can be sent
 
 ## Endpoints
 - `Position Data` <endpoint\> /position_update/
@@ -26,13 +32,14 @@
 - `Equipment Data` <endpoint\> /equipment_update/
 
 ## POST Request Strucutre
-#### Header
+### Header
 - `Authorization Bearer: <token>` (all requests)
 - `Request-Id: <string>` (all requests)
 
-#### Body
+### Body
 
 ##### Position Update
+###### Only fires if position data has changed since the last update.
 ```json
 {
    "username":"cradcol1",
