@@ -1,6 +1,5 @@
 package com.rseye;
 
-import com.google.gson.Gson;
 import com.google.inject.Provides;
 import com.rseye.io.RequestHandler;
 import com.rseye.update.*;
@@ -38,7 +37,6 @@ public class ConnectorPlugin extends Plugin {
 	private ItemManager itemManager;
 
 	private RequestHandler requestHandler;
-	private Gson gson;
 	private boolean hasTicked;
 	private Player player;
 	private PositionUpdate lastPositionUpdate;
@@ -47,29 +45,24 @@ public class ConnectorPlugin extends Plugin {
 	private ConcurrentHashMap<Integer, QuestUpdate.Quest> questStates;
 	private ItemContainer lastBankState;
 	private boolean isBankOpen = false;
-	private GameState lastLoginState;
 
 	@Override
 	protected void startUp() throws Exception {
 		log.info("rseye-connector started!");
 		this.requestHandler = new RequestHandler(config);
-		this.gson = new Gson();
 		this.lastStatUpdate = new CopyOnWriteArrayList<>();
 		this.lastQuestStateUpdate = new CopyOnWriteArrayList<>();
 		this.questStates = new ConcurrentHashMap<>();
-		this.lastLoginState = GameState.UNKNOWN;
 	}
 
 	@Override
 	protected void shutDown() throws Exception {
 		log.info("rseye-connector stopped!");
 		this.requestHandler = null;
-		this.gson = null;
 		this.hasTicked = false;
 		this.lastStatUpdate = null;
 		this.lastQuestStateUpdate = null;
 		this.questStates = null;
-		this.lastLoginState = null;
 	}
 
 	@Subscribe
