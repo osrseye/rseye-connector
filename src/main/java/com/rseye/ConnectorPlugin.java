@@ -47,6 +47,7 @@ public class ConnectorPlugin extends Plugin {
 	private ConcurrentHashMap<Integer, QuestUpdate.Quest> questStates;
 	private ItemContainer lastBankState;
 	private boolean isBankOpen = false;
+	private GameState lastLoginState;
 
 	@Override
 	protected void startUp() throws Exception {
@@ -56,6 +57,7 @@ public class ConnectorPlugin extends Plugin {
 		this.lastStatUpdate = new CopyOnWriteArrayList<>();
 		this.lastQuestStateUpdate = new CopyOnWriteArrayList<>();
 		this.questStates = new ConcurrentHashMap<>();
+		this.lastLoginState = GameState.UNKNOWN;
 	}
 
 	@Override
@@ -65,6 +67,9 @@ public class ConnectorPlugin extends Plugin {
 		this.gson = null;
 		this.hasTicked = false;
 		this.lastStatUpdate = null;
+		this.lastQuestStateUpdate = null;
+		this.questStates = null;
+		this.lastLoginState = null;
 	}
 
 	@Subscribe
@@ -72,6 +77,7 @@ public class ConnectorPlugin extends Plugin {
 		if(!hasTicked || player == null){
 			hasTicked = true;
 			player = client.getLocalPlayer();
+			questStates = new ConcurrentHashMap<>(); // re-init quest states else the initial quest data will only ever be sent once, unlike other similar events which fire every time a "LOGGED_IN" event occurs
 			return;
 		}
 		processPositionUpdate();
@@ -89,11 +95,8 @@ public class ConnectorPlugin extends Plugin {
 
 		if(player == null) return;
 		if(config.loginData()) {
-			GameState state = gameStateChanged.getGameState();
-			if(hasTicked && (state == GameState.LOGGED_IN || state == GameState.CONNECTION_LOST)) {
-				LoginUpdate loginUpdate = new LoginUpdate(player.getName(), state == GameState.LOGGED_IN ? "LOGGED_IN" : "LOGGED_OUT");
-				requestHandler.execute(RequestHandler.Endpoint.LOGIN_UPDATE, loginUpdate.toJson());
-			}
+			LoginUpdate loginUpdate = new LoginUpdate(player.getName(), gameStateChanged.getGameState());
+			requestHandler.execute(RequestHandler.Endpoint.LOGIN_UPDATE, loginUpdate.toJson());
 		}
 	}
 

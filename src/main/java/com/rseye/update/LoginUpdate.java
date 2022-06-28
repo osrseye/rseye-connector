@@ -3,6 +3,7 @@ package com.rseye.update;
 import com.rseye.util.Jsonable;
 import lombok.Getter;
 import lombok.Setter;
+import net.runelite.api.GameState;
 
 import java.util.Objects;
 
@@ -13,9 +14,9 @@ public class LoginUpdate extends Jsonable {
 
     @Getter
     @Setter
-    private String state;
+    private GameState state;
 
-    public LoginUpdate(String username, String state){
+    public LoginUpdate(String username, GameState state) {
         this.username = username;
         this.state = state;
     }

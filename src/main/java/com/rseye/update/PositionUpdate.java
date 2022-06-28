@@ -16,7 +16,7 @@ public class PositionUpdate extends Jsonable {
     @Setter
     private WorldPoint position;
 
-    public PositionUpdate(String username, WorldPoint position){
+    public PositionUpdate(String username, WorldPoint position) {
         this.username = username;
         this.position = position;
     }
