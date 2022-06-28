@@ -31,7 +31,7 @@
 - `Inventory Data` <endpoint\> /inventory_update/
 - `Equipment Data` <endpoint\> /equipment_update/
 
-## POST Request Strucutre
+## POST Request Structure
 ### Header
 - `Authorization Bearer: <token>` (all requests)
 - `Request-Id: <string>` (all requests)
