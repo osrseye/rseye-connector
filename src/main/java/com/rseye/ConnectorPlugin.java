@@ -91,15 +91,15 @@ public class ConnectorPlugin extends Plugin {
 	}
 
 	@Subscribe
-	public void onGameStateChanged(final GameStateChanged gameStateChanged) {
-		if(gameStateChanged.getGameState() != GameState.LOGGED_IN) {
+	public void onGameStateChanged(final GameStateChanged gsc) {
+		if(gsc.getGameState() != GameState.LOGGED_IN && gsc.getGameState() != GameState.LOADING) {
 			// necessary step to refresh the local player object
 			hasTicked = false;
 		}
 
 		if(player == null) return;
 		if(config.loginData()) {
-			LoginUpdate loginUpdate = new LoginUpdate(player.getName(), gameStateChanged.getGameState());
+			LoginUpdate loginUpdate = new LoginUpdate(player.getName(), gsc.getGameState());
 			requestHandler.execute(RequestHandler.Endpoint.LOGIN_UPDATE, loginUpdate.toJson());
 		}
 	}
@@ -113,16 +113,16 @@ public class ConnectorPlugin extends Plugin {
 	}
 
 	@Subscribe
-	public void onItemContainerChanged(final ItemContainerChanged itemContainerChanged) {
+	public void onItemContainerChanged(final ItemContainerChanged icc) {
 		if(player == null) return;
 
 		// process inventory
-		if(itemContainerChanged.getItemContainer() == client.getItemContainer(InventoryID.INVENTORY)) {
-			processInventoryUpdate(itemContainerChanged);
+		if(icc.getItemContainer() == client.getItemContainer(InventoryID.INVENTORY)) {
+			processInventoryUpdate(icc);
 		}
 		// process equipment
-		if(itemContainerChanged.getItemContainer() == client.getItemContainer(InventoryID.EQUIPMENT)) {
-			processEquipmentUpdate(itemContainerChanged);
+		if(icc.getItemContainer() == client.getItemContainer(InventoryID.EQUIPMENT)) {
+			processEquipmentUpdate(icc);
 		}
 	}
 
