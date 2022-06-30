@@ -16,6 +16,7 @@ import net.runelite.client.events.NpcLootReceived;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import okhttp3.OkHttpClient;
 
 import javax.inject.Inject;
 import java.util.Arrays;
@@ -31,14 +32,17 @@ public class ConnectorPlugin extends Plugin {
 	private Client client;
 
 	@Inject
+	private OkHttpClient okHttpClient;
+
+	@Inject
 	private ConnectorConfig config;
 
 	@Inject
 	private ItemManager itemManager;
 
-	private RequestHandler requestHandler;
 	private boolean hasTicked;
 	private int ticks = 0;
+	private RequestHandler requestHandler;
 	private Player player;
 	private PositionUpdate lastPositionUpdate;
 	private CopyOnWriteArrayList<StatChanged> lastStatUpdate;
@@ -48,20 +52,20 @@ public class ConnectorPlugin extends Plugin {
 	private boolean isBankOpen = false;
 
 	@Override
-	protected void startUp() throws Exception {
+	protected void startUp() {
 		log.info("rseye-connector started!");
-		this.requestHandler = new RequestHandler(config);
+		this.requestHandler = new RequestHandler(okHttpClient, config);
 		this.lastStatUpdate = new CopyOnWriteArrayList<>();
 		this.lastQuestStateUpdate = new CopyOnWriteArrayList<>();
 		this.questStates = new ConcurrentHashMap<>();
 	}
 
 	@Override
-	protected void shutDown() throws Exception {
+	protected void shutDown() {
 		log.info("rseye-connector stopped!");
-		this.requestHandler = null;
 		this.hasTicked = false;
 		this.ticks = 0;
+		this.requestHandler = null;
 		this.lastStatUpdate = null;
 		this.lastQuestStateUpdate = null;
 		this.questStates = null;

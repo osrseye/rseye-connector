@@ -15,8 +15,8 @@ public class RequestHandler {
     private final OkHttpClient client;
     private final ConnectorConfig config;
 
-    public RequestHandler(ConnectorConfig config) {
-        this.client = new OkHttpClient();
+    public RequestHandler(OkHttpClient client, ConnectorConfig config) {
+        this.client = client;
         this.config = config;
     }
 
