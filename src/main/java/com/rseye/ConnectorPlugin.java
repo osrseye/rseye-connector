@@ -5,10 +5,7 @@ import com.rseye.io.RequestHandler;
 import com.rseye.update.*;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
-import net.runelite.api.events.GameStateChanged;
-import net.runelite.api.events.GameTick;
-import net.runelite.api.events.ItemContainerChanged;
-import net.runelite.api.events.StatChanged;
+import net.runelite.api.events.*;
 import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
@@ -136,6 +133,17 @@ public class ConnectorPlugin extends Plugin {
 		if(config.lootData()) {
 			LootUpdate lootUpdate = new LootUpdate(player.getName(), npcLootReceived);
 			requestHandler.execute(RequestHandler.Endpoint.LOOT_UPDATE, lootUpdate.toJson());
+		}
+	}
+
+	@Subscribe
+	public void onActorDeath(final ActorDeath actorDeath) {
+		if(player == null) return;
+		if(config.deathData()) {
+			if(actorDeath.getActor().getName() != null && actorDeath.getActor().getName().equals(player.getName())) {
+				DeathUpdate deathUpdate = new DeathUpdate(player.getName());
+				requestHandler.execute(RequestHandler.Endpoint.DEATH_UPDATE, deathUpdate.toJson());
+			}
 		}
 	}
 

@@ -17,6 +17,7 @@
 - `Loot Data` if loot data from npc kills can be sent
 - `Inventory Data` if player inventory data can be sent
 - `Equipment Data` if player equipped item data can be sent
+- `Death Data` if an event can be sent when a player dies
 
 #### Data Frequency
 - `Position Data` how often in ticks position data can be sent
@@ -30,6 +31,7 @@
 - `Loot Data` <endpoint\> /loot_update/
 - `Inventory Data` <endpoint\> /inventory_update/
 - `Equipment Data` <endpoint\> /equipment_update/
+- `Death Data` <endpoint\> /death_update/
 
 ## POST Request Structure
 ### Header
@@ -228,5 +230,12 @@
          "quantity":5
       }
    }
+}
+```
+
+##### Death Update
+```json
+{
+  "username":"cradcol1"
 }
 ```

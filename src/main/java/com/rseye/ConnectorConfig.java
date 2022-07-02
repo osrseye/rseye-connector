@@ -136,6 +136,17 @@ public interface ConnectorConfig extends Config {
 	}
 
 	@ConfigItem(
+			position = 8,
+			keyName = "Send Death Data",
+			name = "Death Data",
+			description = "Toggle to send/omit death data",
+			section = dataToggles
+	)
+	default boolean deathData() {
+		return true;
+	}
+
+	@ConfigItem(
 			position = 0,
 			keyName = "Position Data Frequency",
 			name = "Position Data",

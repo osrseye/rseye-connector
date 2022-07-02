@@ -32,7 +32,7 @@ public class RequestHandler {
             @Override
             @EverythingIsNonNull
             public void onResponse(Call call, Response response) {
-                log.debug("Call response: Endpoint: {}, Contents: {}", endpoint.ordinal(), response.body().toString());
+                log.debug("Call response: Endpoint: {}, Contents: {}", endpoint.ordinal(), response.body() != null ? response.body().toString() : "");
                 response.close();
             }
             @Override
@@ -51,7 +51,8 @@ public class RequestHandler {
         BANK_UPDATE("bank_update/"),
         LOOT_UPDATE("loot_update/"),
         INVENTORY_UPDATE("inventory_update/"),
-        EQUIPMENT_UPDATE("equipment_update/");
+        EQUIPMENT_UPDATE("equipment_update/"),
+        DEATH_UPDATE("death_update/");
 
         public final String location;
         Endpoint(String location) {
