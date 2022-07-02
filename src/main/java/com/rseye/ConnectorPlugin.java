@@ -69,7 +69,7 @@ public class ConnectorPlugin extends Plugin {
 	}
 
 	@Subscribe
-	public void onGameTick(final GameTick gameTick) {
+	public void onGameTick(final GameTick tick) {
 		if(!hasTicked || player == null){
 			hasTicked = true;
 			ticks = 0;
@@ -79,7 +79,6 @@ public class ConnectorPlugin extends Plugin {
 		}
 
 		if(ticks % config.positionDataFrequency() == 0) {
-			log.debug("Processing position update on tick {}", ticks);
 			processPositionUpdate();
 		}
 
@@ -87,145 +86,140 @@ public class ConnectorPlugin extends Plugin {
 		processQuestUpdate();
 		processBankUpdate();
 
-		ticks++;
-		ticks = ticks > 144000 ? 0 : ticks; // reset tick count after 24 hours - otherwise we'll run into an int overflow in roughly 45 years.
+		ticks = ticks++ > 144000 ? 0 : ticks; // reset tick count after 24 hours - otherwise we'll run into an int overflow in roughly 45 years.
 	}
 
 	@Subscribe
 	public void onGameStateChanged(final GameStateChanged gsc) {
 		if(gsc.getGameState() != GameState.LOGGED_IN && gsc.getGameState() != GameState.LOADING) {
-			// necessary step to refresh the local player object
-			hasTicked = false;
+			hasTicked = false; // necessary step to refresh the local player object
+			return;
+		}
+		if(player == null || !config.loginData()) {
+			return;
 		}
 
-		if(player == null) return;
-		if(config.loginData()) {
-			LoginUpdate loginUpdate = new LoginUpdate(player.getName(), gsc.getGameState());
-			requestHandler.execute(RequestHandler.Endpoint.LOGIN_UPDATE, loginUpdate.toJson());
-		}
+		requestHandler.submit(new LoginUpdate(player.getName(), gsc.getGameState()));
 	}
 
 	@Subscribe
 	public void onStatChanged(final StatChanged statChanged) {
-		// no player null check needed since the events are batched and sent after tick 0
-		if(config.statsData()) {
-			lastStatUpdate.add(statChanged);
-		}
+		lastStatUpdate.add(statChanged);
 	}
 
 	@Subscribe
 	public void onItemContainerChanged(final ItemContainerChanged icc) {
-		if(player == null) return;
-
-		// process inventory
 		if(icc.getItemContainer() == client.getItemContainer(InventoryID.INVENTORY)) {
-			processInventoryUpdate(icc);
+			processInventoryUpdate(icc); // process inventory
 		}
-		// process equipment
 		if(icc.getItemContainer() == client.getItemContainer(InventoryID.EQUIPMENT)) {
-			processEquipmentUpdate(icc);
+			processEquipmentUpdate(icc); // process equipment
 		}
 	}
 
 	@Subscribe
 	public void onNpcLootReceived(final NpcLootReceived npcLootReceived) {
-		if(player == null) return;
-		if(config.lootData()) {
-			LootUpdate lootUpdate = new LootUpdate(player.getName(), npcLootReceived);
-			requestHandler.execute(RequestHandler.Endpoint.LOOT_UPDATE, lootUpdate.toJson());
+		if(player == null || !config.lootData()) {
+			return;
 		}
+
+		requestHandler.submit(new LootUpdate(player.getName(), npcLootReceived));
 	}
 
 	@Subscribe
 	public void onActorDeath(final ActorDeath actorDeath) {
-		if(player == null) return;
-		if(config.deathData()) {
-			if(actorDeath.getActor().getName() != null && actorDeath.getActor().getName().equals(player.getName())) {
-				DeathUpdate deathUpdate = new DeathUpdate(player.getName());
-				requestHandler.execute(RequestHandler.Endpoint.DEATH_UPDATE, deathUpdate.toJson());
-			}
+		if(player == null || !config.deathData()) {
+			return;
+		}
+
+		if(actorDeath.getActor().getName() != null && actorDeath.getActor().getName().equals(player.getName())) {
+			requestHandler.submit(new DeathUpdate(player.getName()));
 		}
 	}
 
 	private void processPositionUpdate() {
-		if(config.positionData()) {
-			PositionUpdate positionUpdate = new PositionUpdate(player.getName(), player.getWorldLocation());
-			if(!positionUpdate.equals(lastPositionUpdate)) {
-				requestHandler.execute(RequestHandler.Endpoint.POSITION_UPDATE, positionUpdate.toJson());
-				lastPositionUpdate = positionUpdate;
-			}
+		if(player == null || !config.positionData()) {
+			return;
+		}
+
+		if(lastPositionUpdate == null || !player.getWorldLocation().equals(lastPositionUpdate.getPosition())) {
+			requestHandler.submit(lastPositionUpdate = new PositionUpdate(player.getName(), player.getWorldLocation()));
 		}
 	}
 
 	private void processStatUpdate() {
-		if(config.statsData()) {
-			if(!lastStatUpdate.isEmpty()) {
-				StatUpdate statUpdate = new StatUpdate(player.getName(), player.getCombatLevel(), lastStatUpdate);
-				requestHandler.execute(RequestHandler.Endpoint.STAT_UPDATE, statUpdate.toJson());
-				lastStatUpdate.clear();
-			}
+		if(player == null || !config.statsData()) {
+			lastStatUpdate.clear(); // stops lastStateUpdate becoming an issue if config.statsData is false
+			return;
+		}
+
+		if(!lastStatUpdate.isEmpty()) {
+			requestHandler.submit(new StatUpdate(player.getName(), player.getCombatLevel(), lastStatUpdate));
+			lastStatUpdate.clear();
 		}
 	}
 
 	private void processQuestUpdate() {
-		if(config.questData()) {
-			for(Quest quest: Quest.values()) {
-				QuestUpdate.Quest existingObject = questStates.getOrDefault(quest.getId(), null);
-				QuestUpdate.Quest newObject = new QuestUpdate.Quest(quest.getId(), quest.getName(), quest.getState(client));
-				if(existingObject == null || !existingObject.getState().equals(newObject.getState())) {
-					questStates.put(quest.getId(), newObject);
-					lastQuestStateUpdate.add(newObject);
-				}
+		if(player == null || !config.questData()) {
+			return;
+		}
+
+		for(Quest quest: Quest.values()) {
+			QuestUpdate.Quest existingObject = questStates.getOrDefault(quest.getId(), null);
+			QuestUpdate.Quest newObject = new QuestUpdate.Quest(quest.getId(), quest.getName(), quest.getState(client));
+			if(existingObject == null || !existingObject.getState().equals(newObject.getState())) {
+				questStates.put(quest.getId(), newObject);
+				lastQuestStateUpdate.add(newObject);
 			}
-			if(!lastQuestStateUpdate.isEmpty()) {
-				QuestUpdate questUpdate = new QuestUpdate(player.getName(), client.getVar(VarPlayer.QUEST_POINTS), lastQuestStateUpdate);
-				requestHandler.execute(RequestHandler.Endpoint.QUEST_UPDATE, questUpdate.toJson());
-				lastQuestStateUpdate.clear();
-			}
+		}
+		if(!lastQuestStateUpdate.isEmpty()) {
+			requestHandler.submit(new QuestUpdate(player.getName(), client.getVar(VarPlayer.QUEST_POINTS), lastQuestStateUpdate));
+			lastQuestStateUpdate.clear();
 		}
 	}
 
 	private void processBankUpdate() {
-		if(config.bankData()) {
-			if(client.getWidget(WidgetInfo.BANK_ITEM_CONTAINER) != null) {
-				isBankOpen = true;
-				lastBankState = client.getItemContainer(InventoryID.BANK);
-				return;
-			}
-			if(isBankOpen && lastBankState != null) {
-				isBankOpen = false;
-				List<Item> items = Arrays.asList(lastBankState.getItems());
-				BankUpdate bankUpdate = new BankUpdate(player.getName(), items);
-				requestHandler.execute(RequestHandler.Endpoint.BANK_UPDATE, bankUpdate.toJson());
-			}
+		if(player == null || !config.bankData()) {
+			return;
+		}
+
+		if(client.getWidget(WidgetInfo.BANK_ITEM_CONTAINER) != null) {
+			isBankOpen = true;
+			lastBankState = client.getItemContainer(InventoryID.BANK);
+			return;
+		}
+		if(isBankOpen && lastBankState != null) {
+			isBankOpen = false;
+			List<Item> items = Arrays.asList(lastBankState.getItems());
+			requestHandler.submit(new BankUpdate(player.getName(), items));
 		}
 	}
 
 	private void processInventoryUpdate(ItemContainerChanged icc) {
-		if(config.inventoryData()) {
-			List<Item> items = Arrays.asList(icc.getItemContainer().getItems());
-			InventoryUpdate inventoryUpdate = new InventoryUpdate(player.getName(), items);
-			requestHandler.execute(RequestHandler.Endpoint.INVENTORY_UPDATE, inventoryUpdate.toJson());
+		if(player == null || !config.inventoryData()) {
+			return;
 		}
+
+		List<Item> items = Arrays.asList(icc.getItemContainer().getItems());
+		requestHandler.submit(new InventoryUpdate(player.getName(), items));
 	}
 
 	private void processEquipmentUpdate(ItemContainerChanged icc) {
-		if(config.equipmentData()) {
-			List<Item> items = Arrays.asList(icc.getItemContainer().getItems());
-			HashMap<EquipmentInventorySlot, Item> equipped = new HashMap<>();
+		if(player == null || !config.equipmentData()) {
+			return;
+		}
 
-			for(EquipmentInventorySlot equipmentInventorySlot : EquipmentInventorySlot.values()) {
-				if(equipmentInventorySlot.getSlotIdx() < items.size()) {
-					Item item = items.get(equipmentInventorySlot.getSlotIdx());
-					if(item.getId() > -1 && item.getQuantity() > 0) {
-						equipped.put(equipmentInventorySlot, item);
-					}
+		List<Item> items = Arrays.asList(icc.getItemContainer().getItems());
+		HashMap<EquipmentInventorySlot, Item> equipped = new HashMap<>();
+		for(EquipmentInventorySlot equipmentInventorySlot : EquipmentInventorySlot.values()) {
+			if(equipmentInventorySlot.getSlotIdx() < items.size()) {
+				Item item = items.get(equipmentInventorySlot.getSlotIdx());
+				if(item.getId() > -1 && item.getQuantity() > 0) {
+					equipped.put(equipmentInventorySlot, item);
 				}
 			}
-
-			EquipmentUpdate equipmentUpdate = new EquipmentUpdate(player.getName(), equipped);
-			requestHandler.execute(RequestHandler.Endpoint.EQUIPMENT_UPDATE, equipmentUpdate.toJson());
 		}
+		requestHandler.submit(new EquipmentUpdate(player.getName(), equipped));
 	}
 
 	@Provides
