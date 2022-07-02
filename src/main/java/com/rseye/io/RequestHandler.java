@@ -1,6 +1,7 @@
 package com.rseye.io;
 
 import com.rseye.ConnectorConfig;
+import com.rseye.util.Postable;
 import okhttp3.*;
 import okhttp3.internal.annotations.EverythingIsNonNull;
 import org.slf4j.Logger;
@@ -20,19 +21,19 @@ public class RequestHandler {
         this.config = config;
     }
 
-    public void execute(Endpoint endpoint, String data) {
+    public <T extends Postable> void submit(T update) {
         Request request = new Request.Builder()
-                .url(config.baseEndpoint() + endpoint.location)
+                .url(config.baseEndpoint() + update.endpoint().location)
                 .header("Authorization", "Bearer: " + config.bearerToken())
                 .header("X-Request-Id", UUID.randomUUID().toString())
-                .post(RequestBody.create(JSON, data))
+                .post(RequestBody.create(JSON, update.toJson()))
                 .build();
 
         client.newCall(request).enqueue(new Callback() {
             @Override
             @EverythingIsNonNull
             public void onResponse(Call call, Response response) {
-                log.debug("Call response: Endpoint: {}, Contents: {}", endpoint.ordinal(), response.body() != null ? response.body().toString() : "");
+                log.debug("Call response: Endpoint: {}, Contents: {}", update.endpoint().ordinal(), response.body() != null ? response.body().toString() : "");
                 response.close();
             }
             @Override
