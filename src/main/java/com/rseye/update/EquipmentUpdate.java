@@ -1,15 +1,15 @@
 package com.rseye.update;
 
-import com.rseye.util.Jsonable;
+import com.rseye.io.RequestHandler;
+import com.rseye.util.Postable;
 import lombok.Getter;
 import lombok.Setter;
 import net.runelite.api.EquipmentInventorySlot;
 import net.runelite.api.Item;
 
 import java.util.HashMap;
-import java.util.Objects;
 
-public class EquipmentUpdate extends Jsonable {
+public class EquipmentUpdate implements Postable {
     @Getter
     @Setter
     private String username;
@@ -24,15 +24,7 @@ public class EquipmentUpdate extends Jsonable {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if(this == o) return true;
-        if(o == null || getClass() != o.getClass()) return false;
-        EquipmentUpdate that = (EquipmentUpdate) o;
-        return Objects.equals(username, that.username) && Objects.equals(items, that.items);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(username, items);
+    public RequestHandler.Endpoint endpoint() {
+        return RequestHandler.Endpoint.EQUIPMENT_UPDATE;
     }
 }

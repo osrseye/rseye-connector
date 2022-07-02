@@ -1,13 +1,12 @@
 package com.rseye.update;
 
-import com.rseye.util.Jsonable;
+import com.rseye.io.RequestHandler;
+import com.rseye.util.Postable;
 import lombok.Getter;
 import lombok.Setter;
 import net.runelite.api.GameState;
 
-import java.util.Objects;
-
-public class LoginUpdate extends Jsonable {
+public class LoginUpdate implements Postable {
     @Getter
     @Setter
     private String username;
@@ -22,15 +21,7 @@ public class LoginUpdate extends Jsonable {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if(this == o) return true;
-        if(o == null || getClass() != o.getClass()) return false;
-        LoginUpdate loginUpdate = (LoginUpdate) o;
-        return Objects.equals(username, loginUpdate.username) && Objects.equals(state, loginUpdate.state) ;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(state);
+    public RequestHandler.Endpoint endpoint() {
+        return RequestHandler.Endpoint.LOGIN_UPDATE;
     }
 }

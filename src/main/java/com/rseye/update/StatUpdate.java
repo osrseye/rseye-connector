@@ -1,14 +1,14 @@
 package com.rseye.update;
 
-import com.rseye.util.Jsonable;
+import com.rseye.io.RequestHandler;
+import com.rseye.util.Postable;
 import lombok.Getter;
 import lombok.Setter;
 import net.runelite.api.events.StatChanged;
 
-import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-public class StatUpdate extends Jsonable {
+public class StatUpdate implements Postable {
     @Getter
     @Setter
     private String username;
@@ -28,15 +28,7 @@ public class StatUpdate extends Jsonable {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if(this == o) return true;
-        if(o == null || getClass() != o.getClass()) return false;
-        StatUpdate that = (StatUpdate) o;
-        return combatLevel == that.combatLevel && Objects.equals(username, that.username) && Objects.equals(statChanges, that.statChanges);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(username, statChanges);
+    public RequestHandler.Endpoint endpoint() {
+        return RequestHandler.Endpoint.STAT_UPDATE;
     }
 }
