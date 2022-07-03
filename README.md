@@ -18,9 +18,13 @@
 - `Inventory Data` if player inventory data can be sent
 - `Equipment Data` if player equipped item data can be sent
 - `Death Data` if an event can be sent when a player dies
+- `Overhead Data` if player overhead prayer data can be sent
+- `Skull Data` if player skull data can be sent
 
 #### Data Frequency
 - `Position Data` how often in ticks position data can be sent
+- `Overhead Data` how often in ticks overhead prayer data can be sent
+- `Skull Data` how often in ticks skull data can be sent
 
 ## Endpoints
 - `Position Data` <endpoint\> /position_update/
@@ -32,6 +36,8 @@
 - `Inventory Data` <endpoint\> /inventory_update/
 - `Equipment Data` <endpoint\> /equipment_update/
 - `Death Data` <endpoint\> /death_update/
+- `Overhead Data` <endpoint\> /overhead_update/
+- `Skull Data` <endpoint\> /skull_update/
 
 ## POST Request Structure
 ### Header
@@ -237,5 +243,23 @@
 ```json
 {
   "username":"cradcol1"
+}
+```
+
+##### Overhead Update
+###### If the player stops using an overhead prayer, the `"overhead":` portion of the data will be omitted. Other possible values can be found on the official runelite api [documentation](https://static.runelite.net/api/runelite-api/net/runelite/api/HeadIcon.html).
+```json
+{
+  "username":"cradcol1",
+  "overhead":"MAGIC"
+}
+```
+
+##### Skull Update
+###### If the player stops being skulled, the `"skull":` portion of the data will be omitted. Other possible values can be found on the official runelite api [documentation](https://static.runelite.net/api/runelite-api/net/runelite/api/SkullIcon.html).
+```json
+{
+  "username":"cradcol1",
+  "skull":"SKULL"
 }
 ```

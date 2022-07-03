@@ -46,6 +46,8 @@ public class ConnectorPlugin extends Plugin {
 	private CopyOnWriteArrayList<QuestUpdate.Quest> lastQuestStateUpdate;
 	private ConcurrentHashMap<Integer, QuestUpdate.Quest> questStates;
 	private ItemContainer lastBankState;
+	private OverheadUpdate lastOverheadState;
+	private SkullUpdate lastSkullState;
 	private boolean isBankOpen = false;
 
 	@Override
@@ -55,6 +57,8 @@ public class ConnectorPlugin extends Plugin {
 		this.lastStatUpdate = new CopyOnWriteArrayList<>();
 		this.lastQuestStateUpdate = new CopyOnWriteArrayList<>();
 		this.questStates = new ConcurrentHashMap<>();
+		this.lastOverheadState = new OverheadUpdate("", null);
+		this.lastSkullState = new SkullUpdate("", null);
 	}
 
 	@Override
@@ -66,6 +70,8 @@ public class ConnectorPlugin extends Plugin {
 		this.lastStatUpdate = null;
 		this.lastQuestStateUpdate = null;
 		this.questStates = null;
+		this.lastOverheadState = null;
+		this.lastSkullState = null;
 	}
 
 	@Subscribe
@@ -80,6 +86,14 @@ public class ConnectorPlugin extends Plugin {
 
 		if(ticks % config.positionDataFrequency() == 0) {
 			processPositionUpdate();
+		}
+
+		if(ticks % config.overheadDataFrequency() == 0) {
+			processOverheadUpdate();
+		}
+
+		if(ticks % config.skullDataFrequency() == 0) {
+			processSkullUpdate();
 		}
 
 		processStatUpdate(); // group together stat changes since there can be multiple per tick
@@ -220,6 +234,28 @@ public class ConnectorPlugin extends Plugin {
 			}
 		}
 		requestHandler.submit(new EquipmentUpdate(player.getName(), equipped));
+	}
+
+	private void processOverheadUpdate() {
+		if(player == null || !config.overheadData()) {
+			return;
+		}
+
+		if(lastOverheadState.getOverhead() != null && !lastOverheadState.getOverhead().equals(player.getOverheadIcon())
+				|| lastOverheadState.getOverhead() == null && player.getOverheadIcon() != null) {
+			requestHandler.submit(lastOverheadState = new OverheadUpdate(player.getName(), player.getOverheadIcon()));
+		}
+	}
+
+	private void processSkullUpdate() {
+		if(player == null || !config.skullData()) {
+			return;
+		}
+
+		if(lastSkullState.getSkull() != null && !lastSkullState.getSkull().equals(player.getSkullIcon())
+				|| lastSkullState.getSkull() == null && player.getSkullIcon() != null) {
+			requestHandler.submit(lastSkullState = new SkullUpdate(player.getName(), player.getSkullIcon()));
+		}
 	}
 
 	@Provides

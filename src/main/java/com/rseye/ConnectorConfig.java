@@ -147,6 +147,28 @@ public interface ConnectorConfig extends Config {
 	}
 
 	@ConfigItem(
+			position = 9,
+			keyName = "Send Overhead Data",
+			name = "Overhead Data",
+			description = "Toggle to send/omit player overhead icon data",
+			section = dataToggles
+	)
+	default boolean overheadData() {
+		return true;
+	}
+
+	@ConfigItem(
+			position = 10,
+			keyName = "Send Skull Data",
+			name = "Skull Data",
+			description = "Toggle to send/omit player skull icon data",
+			section = dataToggles
+	)
+	default boolean skullData() {
+		return true;
+	}
+
+	@ConfigItem(
 			position = 0,
 			keyName = "Position Data Frequency",
 			name = "Position Data",
@@ -155,6 +177,30 @@ public interface ConnectorConfig extends Config {
 	)
 	@Units(Units.TICKS)
 	default int positionDataFrequency() {
+		return 1;
+	}
+
+	@ConfigItem(
+			position = 1,
+			keyName = "Overhead Data Frequency",
+			name = "Overhead Data",
+			description = "How often to send overhead icon data",
+			section = dataFrequency
+	)
+	@Units(Units.TICKS)
+	default int overheadDataFrequency() {
+		return 1;
+	}
+
+	@ConfigItem(
+			position = 2,
+			keyName = "Skull Data Frequency",
+			name = "Skull Data",
+			description = "How often to send skull icon data",
+			section = dataFrequency
+	)
+	@Units(Units.TICKS)
+	default int skullDataFrequency() {
 		return 1;
 	}
 }

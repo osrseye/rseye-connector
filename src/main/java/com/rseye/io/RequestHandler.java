@@ -53,7 +53,9 @@ public class RequestHandler {
         LOOT_UPDATE("loot_update/"),
         INVENTORY_UPDATE("inventory_update/"),
         EQUIPMENT_UPDATE("equipment_update/"),
-        DEATH_UPDATE("death_update/");
+        DEATH_UPDATE("death_update/"),
+        OVERHEAD_UPDATE("overhead_update/"),
+        SKULL_UPDATE("skull_update/");
 
         public final String location;
         Endpoint(String location) {
