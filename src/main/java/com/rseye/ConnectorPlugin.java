@@ -6,6 +6,7 @@ import com.rseye.update.*;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
 import net.runelite.api.events.*;
+import net.runelite.api.widgets.WidgetID;
 import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
@@ -158,6 +159,22 @@ public class ConnectorPlugin extends Plugin {
 
 		if(actorDeath.getActor().getName() != null && actorDeath.getActor().getName().equals(player.getName())) {
 			requestHandler.submit(new DeathUpdate(player.getName()));
+		}
+	}
+
+	@Subscribe
+	public void onWidgetLoaded(final WidgetLoaded widgetLoaded) {
+		ItemContainer container;
+		switch(widgetLoaded.getGroupId()) {
+			case WidgetID.BARROWS_GROUP_ID:
+				container = client.getItemContainer(InventoryID.BARROWS_REWARD);
+				break;
+			default:
+				return;
+		}
+
+		if(container != null) {
+			requestHandler.submit(new LootUpdate(player.getName(), widgetLoaded.getGroupId(), container));
 		}
 	}
 
