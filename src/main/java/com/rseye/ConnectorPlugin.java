@@ -10,6 +10,7 @@ import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.NpcLootReceived;
+import net.runelite.client.events.PlayerLootReceived;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
@@ -138,6 +139,15 @@ public class ConnectorPlugin extends Plugin {
 		}
 
 		requestHandler.submit(new LootUpdate(player.getName(), npcLootReceived));
+	}
+
+	@Subscribe
+	public void onPlayerLootReceived(final PlayerLootReceived playerLootReceived) {
+		if(player == null || !config.lootData()) {
+			return;
+		}
+
+		requestHandler.submit(new LootUpdate(player.getName(), playerLootReceived));
 	}
 
 	@Subscribe

@@ -144,11 +144,13 @@
 ```
 
 ##### Loot Update
-###### Upon killing an NPC which drops loot, if the NPC fails to drop loot this event will simply not fire.
+###### Upon killing an NPC or Player which drops loot, if the NPC or Player fails to drop loot this event will simply not fire.
 ```json
 {
    "username":"cradcol1",
-   "npcId":3010,
+   "lootType":"npc", // types: npc, player
+   "entityId":3010,
+   "entityName":"Man",
    "items":[
       {
          "id":526,
