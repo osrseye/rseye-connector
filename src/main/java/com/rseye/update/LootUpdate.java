@@ -4,9 +4,9 @@ import com.rseye.io.RequestHandler;
 import com.rseye.util.Postable;
 import lombok.Getter;
 import lombok.Setter;
+import net.runelite.api.InventoryID;
 import net.runelite.api.Item;
 import net.runelite.api.ItemContainer;
-import net.runelite.api.widgets.WidgetID;
 import net.runelite.client.events.NpcLootReceived;
 import net.runelite.client.events.PlayerLootReceived;
 
@@ -53,11 +53,25 @@ public class LootUpdate implements Postable {
 
     public LootUpdate(String username, int type, ItemContainer itemContainer) {
         this.username = username;
-        switch(type) {
-            case WidgetID.BARROWS_GROUP_ID:
-                this.lootType = "Barrows";
-                this.items.addAll(Arrays.asList(itemContainer.getItems()));
-                break;
+        if(type == InventoryID.BARROWS_REWARD.getId()) {
+            this.lootType = "Barrows";
+            this.items.addAll(Arrays.asList(itemContainer.getItems()));
+            return;
+        }
+        if(type == InventoryID.CHAMBERS_OF_XERIC_CHEST.getId()) {
+            this.lootType = "Chambers of Xeric";
+            this.items.addAll(Arrays.asList(itemContainer.getItems()));
+            return;
+        }
+        if(type == InventoryID.THEATRE_OF_BLOOD_CHEST.getId()) {
+            this.lootType = "Theatre of Blood";
+            this.items.addAll(Arrays.asList(itemContainer.getItems()));
+            return;
+        }
+        if(type == InventoryID.TOA_REWARD_CHEST.getId()) {
+            this.lootType = "Tombs of Amascut";
+            this.items.addAll(Arrays.asList(itemContainer.getItems()));
+            return;
         }
     }
 

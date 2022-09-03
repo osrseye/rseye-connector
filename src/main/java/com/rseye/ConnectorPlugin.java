@@ -6,7 +6,6 @@ import com.rseye.update.*;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
 import net.runelite.api.events.*;
-import net.runelite.api.widgets.WidgetID;
 import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
@@ -124,12 +123,26 @@ public class ConnectorPlugin extends Plugin {
 	}
 
 	@Subscribe
-	public void onItemContainerChanged(final ItemContainerChanged icc) {
-		if(icc.getItemContainer() == client.getItemContainer(InventoryID.INVENTORY)) {
-			processInventoryUpdate(icc); // process inventory
+	public void onItemContainerChanged(final ItemContainerChanged itemContainerChanged) {
+		if(itemContainerChanged.getItemContainer() == client.getItemContainer(InventoryID.INVENTORY)) {
+			processInventoryUpdate(itemContainerChanged); // process inventory
+			return;
 		}
-		if(icc.getItemContainer() == client.getItemContainer(InventoryID.EQUIPMENT)) {
-			processEquipmentUpdate(icc); // process equipment
+		if(itemContainerChanged.getItemContainer() == client.getItemContainer(InventoryID.EQUIPMENT)) {
+			processEquipmentUpdate(itemContainerChanged); // process equipment
+			return;
+		}
+
+		if(player == null || !config.lootData()) {
+			return;
+		}
+
+		if(itemContainerChanged.getItemContainer() == client.getItemContainer(itemContainerChanged.getContainerId())) {
+			LootUpdate lootUpdate = new LootUpdate(player.getName(), itemContainerChanged.getContainerId(), itemContainerChanged.getItemContainer());
+			if(lootUpdate.getItems().size() < 1) {
+				return;
+			}
+			requestHandler.submit(lootUpdate);
 		}
 	}
 
@@ -159,22 +172,6 @@ public class ConnectorPlugin extends Plugin {
 
 		if(actorDeath.getActor().getName() != null && actorDeath.getActor().getName().equals(player.getName())) {
 			requestHandler.submit(new DeathUpdate(player.getName()));
-		}
-	}
-
-	@Subscribe
-	public void onWidgetLoaded(final WidgetLoaded widgetLoaded) {
-		ItemContainer container;
-		switch(widgetLoaded.getGroupId()) {
-			case WidgetID.BARROWS_GROUP_ID:
-				container = client.getItemContainer(InventoryID.BARROWS_REWARD);
-				break;
-			default:
-				return;
-		}
-
-		if(container != null) {
-			requestHandler.submit(new LootUpdate(player.getName(), widgetLoaded.getGroupId(), container));
 		}
 	}
 
