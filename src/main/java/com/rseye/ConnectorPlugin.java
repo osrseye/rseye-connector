@@ -211,7 +211,7 @@ public class ConnectorPlugin extends Plugin {
 			}
 		}
 		if(!lastQuestStateUpdate.isEmpty()) {
-			requestHandler.submit(new QuestUpdate(player.getName(), client.getVar(VarPlayer.QUEST_POINTS), lastQuestStateUpdate));
+			requestHandler.submit(new QuestUpdate(player.getName(), client.getVarpValue(VarPlayer.QUEST_POINTS), lastQuestStateUpdate));
 			lastQuestStateUpdate.clear();
 		}
 	}
