@@ -144,11 +144,11 @@
 ```
 
 ##### Loot Update
-###### Upon killing an NPC or Player which drops loot, if the NPC or Player fails to drop loot this event will simply not fire.
+###### Upon killing an NPC or Player which drops loot, or if you receive chest loot from a raid or barrows. If no loot is rewarded this event will not fire.
 ```json
 {
    "username":"cradcol1",
-   "lootType":"npc", // types: npc, player
+   "lootType":"NPC", // types: NPC, Player, Barrows, Chambers of Xeric, Theatre of Blood, Tombs of Amascut
    "entityId":3010,
    "entityName":"Man",
    "items":[
