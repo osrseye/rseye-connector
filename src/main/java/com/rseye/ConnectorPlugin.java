@@ -79,7 +79,7 @@ public class ConnectorPlugin extends Plugin {
 
 	@Subscribe
 	public void onGameTick(final GameTick tick) {
-		if(gameState != GameState.LOGGED_IN || player == null || player.getName() == null){
+		if(playerIsNull() || gameState != GameState.LOGGED_IN){
 			return; // player is set in #onGameStateChanged
 		}
 
@@ -106,14 +106,22 @@ public class ConnectorPlugin extends Plugin {
 	public void onGameStateChanged(final GameStateChanged gsc) {
 		gameState = gsc.getGameState();
 
+		// if state is login_screen, clear player. this happens if the player logs out (not hop)
+		if(gameState == GameState.LOGIN_SCREEN) {
+			ticks.set(0);
+			player = null;
+			questStates = new ConcurrentHashMap<>();
+			return;
+		}
+
 		if(gameState == GameState.LOGGED_IN) {
-			ticks = new AtomicInteger(0);
+			ticks.set(0);
 			player = client.getLocalPlayer();
 			questStates = new ConcurrentHashMap<>(); // re-init quest states else the initial quest data will only ever be sent once, unlike other similar events which fire every time a "LOGGED_IN" event occurs
 			return;
 		}
 
-		if(player == null || player.getName() == null || !config.loginData()) {
+		if(playerIsNull() || !config.loginData()) {
 			return;
 		}
 
@@ -136,7 +144,7 @@ public class ConnectorPlugin extends Plugin {
 			return;
 		}
 
-		if(player == null || player.getName() == null || !config.lootData()) {
+		if(playerIsNull() || !config.lootData()) {
 			return;
 		}
 
@@ -151,7 +159,7 @@ public class ConnectorPlugin extends Plugin {
 
 	@Subscribe
 	public void onNpcLootReceived(final NpcLootReceived npcLootReceived) {
-		if(player == null || player.getName() == null || !config.lootData()) {
+		if(playerIsNull() || !config.lootData()) {
 			return;
 		}
 
@@ -160,7 +168,7 @@ public class ConnectorPlugin extends Plugin {
 
 	@Subscribe
 	public void onPlayerLootReceived(final PlayerLootReceived playerLootReceived) {
-		if(player == null || player.getName() == null || !config.lootData()) {
+		if(playerIsNull() || !config.lootData()) {
 			return;
 		}
 
@@ -169,7 +177,7 @@ public class ConnectorPlugin extends Plugin {
 
 	@Subscribe
 	public void onActorDeath(final ActorDeath actorDeath) {
-		if(player == null || player.getName() == null || !config.deathData()) {
+		if(playerIsNull() || !config.deathData()) {
 			return;
 		}
 
@@ -179,7 +187,7 @@ public class ConnectorPlugin extends Plugin {
 	}
 
 	private void processPositionUpdate() {
-		if(player == null || player.getName() == null || !config.positionData()) {
+		if(playerIsNull() || !config.positionData()) {
 			return;
 		}
 
@@ -189,7 +197,7 @@ public class ConnectorPlugin extends Plugin {
 	}
 
 	private void processStatUpdate() {
-		if(player == null || player.getName() == null || !config.statsData()) {
+		if(playerIsNull() || !config.statsData()) {
 			lastStatUpdate.clear(); // stops lastStateUpdate becoming an issue if config.statsData is false
 			return;
 		}
@@ -201,7 +209,7 @@ public class ConnectorPlugin extends Plugin {
 	}
 
 	private void processQuestUpdate() {
-		if(player == null || player.getName() == null || !config.questData()) {
+		if(playerIsNull() || !config.questData()) {
 			return;
 		}
 
@@ -220,7 +228,7 @@ public class ConnectorPlugin extends Plugin {
 	}
 
 	private void processBankUpdate() {
-		if(player == null || player.getName() == null || !config.bankData()) {
+		if(playerIsNull() || !config.bankData()) {
 			return;
 		}
 
@@ -237,7 +245,7 @@ public class ConnectorPlugin extends Plugin {
 	}
 
 	private void processInventoryUpdate(ItemContainerChanged icc) {
-		if(player == null || player.getName() == null || !config.inventoryData()) {
+		if(playerIsNull() || !config.inventoryData()) {
 			return;
 		}
 
@@ -246,7 +254,7 @@ public class ConnectorPlugin extends Plugin {
 	}
 
 	private void processEquipmentUpdate(ItemContainerChanged icc) {
-		if(player == null || player.getName() == null || !config.equipmentData()) {
+		if(playerIsNull() || !config.equipmentData()) {
 			return;
 		}
 
@@ -264,7 +272,7 @@ public class ConnectorPlugin extends Plugin {
 	}
 
 	private void processOverheadUpdate() {
-		if(player == null || player.getName() == null || !config.overheadData()) {
+		if(playerIsNull() || !config.overheadData()) {
 			return;
 		}
 
@@ -275,7 +283,7 @@ public class ConnectorPlugin extends Plugin {
 	}
 
 	private void processSkullUpdate() {
-		if(player == null || player.getName() == null || !config.skullData()) {
+		if(playerIsNull() || !config.skullData()) {
 			return;
 		}
 
@@ -283,6 +291,10 @@ public class ConnectorPlugin extends Plugin {
 				|| lastSkullState.getSkull() == null && player.getSkullIcon() != null) {
 			requestHandler.submit(lastSkullState = new SkullUpdate(player.getName(), player.getSkullIcon()));
 		}
+	}
+
+	private boolean playerIsNull() {
+		return player == null || player.getName() == null;
 	}
 
 	@Provides
