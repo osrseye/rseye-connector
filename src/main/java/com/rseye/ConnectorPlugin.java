@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @PluginDescriptor(name = "rseye-connector")
@@ -38,9 +39,9 @@ public class ConnectorPlugin extends Plugin {
 	@Inject
 	private ItemManager itemManager;
 
-	private boolean hasTicked;
-	private int ticks = 0;
+	private AtomicInteger ticks = new AtomicInteger(0);
 	private RequestHandler requestHandler;
+	private GameState gameState = GameState.UNKNOWN;
 	private Player player;
 	private PositionUpdate lastPositionUpdate;
 	private CopyOnWriteArrayList<StatChanged> lastStatUpdate;
@@ -54,6 +55,7 @@ public class ConnectorPlugin extends Plugin {
 	@Override
 	protected void startUp() {
 		log.info("rseye-connector started!");
+		this.ticks = new AtomicInteger(0);
 		this.requestHandler = new RequestHandler(okHttpClient, config);
 		this.lastStatUpdate = new CopyOnWriteArrayList<>();
 		this.lastQuestStateUpdate = new CopyOnWriteArrayList<>();
@@ -65,9 +67,9 @@ public class ConnectorPlugin extends Plugin {
 	@Override
 	protected void shutDown() {
 		log.info("rseye-connector stopped!");
-		this.hasTicked = false;
-		this.ticks = 0;
+		this.ticks = null;
 		this.requestHandler = null;
+		this.gameState = GameState.UNKNOWN;
 		this.lastStatUpdate = null;
 		this.lastQuestStateUpdate = null;
 		this.questStates = null;
@@ -77,23 +79,19 @@ public class ConnectorPlugin extends Plugin {
 
 	@Subscribe
 	public void onGameTick(final GameTick tick) {
-		if(!hasTicked || player == null){
-			hasTicked = true;
-			ticks = 0;
-			player = client.getLocalPlayer();
-			questStates = new ConcurrentHashMap<>(); // re-init quest states else the initial quest data will only ever be sent once, unlike other similar events which fire every time a "LOGGED_IN" event occurs
-			return;
+		if(playerIsNull() || gameState != GameState.LOGGED_IN){
+			return; // player is set in #onGameStateChanged
 		}
 
-		if(ticks % config.positionDataFrequency() == 0) {
+		if(ticks.get() % config.positionDataFrequency() == 0) {
 			processPositionUpdate();
 		}
 
-		if(ticks % config.overheadDataFrequency() == 0) {
+		if(ticks.get() % config.overheadDataFrequency() == 0) {
 			processOverheadUpdate();
 		}
 
-		if(ticks % config.skullDataFrequency() == 0) {
+		if(ticks.get() % config.skullDataFrequency() == 0) {
 			processSkullUpdate();
 		}
 
@@ -101,16 +99,29 @@ public class ConnectorPlugin extends Plugin {
 		processQuestUpdate();
 		processBankUpdate();
 
-		ticks = ticks++ > 144000 ? 0 : ticks; // reset tick count after 24 hours - otherwise we'll run into an int overflow in roughly 45 years.
+		ticks.set(ticks.get() > 144000 ? 0 : ticks.get() + 1); // reset tick count after 24 hours - otherwise we'll run into an int overflow in roughly 45 years.
 	}
 
 	@Subscribe
 	public void onGameStateChanged(final GameStateChanged gsc) {
-		if(gsc.getGameState() != GameState.LOGGED_IN && gsc.getGameState() != GameState.LOADING) {
-			hasTicked = false; // necessary step to refresh the local player object
+		gameState = gsc.getGameState();
+
+		// if state is login_screen, clear player. this happens if the player logs out (not hop)
+		if(gameState == GameState.LOGIN_SCREEN) {
+			ticks.set(0);
+			player = null;
+			questStates = new ConcurrentHashMap<>();
 			return;
 		}
-		if(player == null || !config.loginData()) {
+
+		if(gameState == GameState.LOGGED_IN) {
+			ticks.set(0);
+			player = client.getLocalPlayer();
+			questStates = new ConcurrentHashMap<>(); // re-init quest states else the initial quest data will only ever be sent once, unlike other similar events which fire every time a "LOGGED_IN" event occurs
+			return;
+		}
+
+		if(playerIsNull() || !config.loginData()) {
 			return;
 		}
 
@@ -133,7 +144,7 @@ public class ConnectorPlugin extends Plugin {
 			return;
 		}
 
-		if(player == null || !config.lootData()) {
+		if(playerIsNull() || !config.lootData()) {
 			return;
 		}
 
@@ -148,7 +159,7 @@ public class ConnectorPlugin extends Plugin {
 
 	@Subscribe
 	public void onNpcLootReceived(final NpcLootReceived npcLootReceived) {
-		if(player == null || !config.lootData()) {
+		if(playerIsNull() || !config.lootData()) {
 			return;
 		}
 
@@ -157,7 +168,7 @@ public class ConnectorPlugin extends Plugin {
 
 	@Subscribe
 	public void onPlayerLootReceived(final PlayerLootReceived playerLootReceived) {
-		if(player == null || !config.lootData()) {
+		if(playerIsNull() || !config.lootData()) {
 			return;
 		}
 
@@ -166,7 +177,7 @@ public class ConnectorPlugin extends Plugin {
 
 	@Subscribe
 	public void onActorDeath(final ActorDeath actorDeath) {
-		if(player == null || !config.deathData()) {
+		if(playerIsNull() || !config.deathData()) {
 			return;
 		}
 
@@ -176,7 +187,7 @@ public class ConnectorPlugin extends Plugin {
 	}
 
 	private void processPositionUpdate() {
-		if(player == null || !config.positionData()) {
+		if(playerIsNull() || !config.positionData()) {
 			return;
 		}
 
@@ -186,7 +197,7 @@ public class ConnectorPlugin extends Plugin {
 	}
 
 	private void processStatUpdate() {
-		if(player == null || !config.statsData()) {
+		if(playerIsNull() || !config.statsData()) {
 			lastStatUpdate.clear(); // stops lastStateUpdate becoming an issue if config.statsData is false
 			return;
 		}
@@ -198,7 +209,7 @@ public class ConnectorPlugin extends Plugin {
 	}
 
 	private void processQuestUpdate() {
-		if(player == null || !config.questData()) {
+		if(playerIsNull() || !config.questData()) {
 			return;
 		}
 
@@ -217,7 +228,7 @@ public class ConnectorPlugin extends Plugin {
 	}
 
 	private void processBankUpdate() {
-		if(player == null || !config.bankData()) {
+		if(playerIsNull() || !config.bankData()) {
 			return;
 		}
 
@@ -234,7 +245,7 @@ public class ConnectorPlugin extends Plugin {
 	}
 
 	private void processInventoryUpdate(ItemContainerChanged icc) {
-		if(player == null || !config.inventoryData()) {
+		if(playerIsNull() || !config.inventoryData()) {
 			return;
 		}
 
@@ -243,7 +254,7 @@ public class ConnectorPlugin extends Plugin {
 	}
 
 	private void processEquipmentUpdate(ItemContainerChanged icc) {
-		if(player == null || !config.equipmentData()) {
+		if(playerIsNull() || !config.equipmentData()) {
 			return;
 		}
 
@@ -261,7 +272,7 @@ public class ConnectorPlugin extends Plugin {
 	}
 
 	private void processOverheadUpdate() {
-		if(player == null || !config.overheadData()) {
+		if(playerIsNull() || !config.overheadData()) {
 			return;
 		}
 
@@ -272,7 +283,7 @@ public class ConnectorPlugin extends Plugin {
 	}
 
 	private void processSkullUpdate() {
-		if(player == null || !config.skullData()) {
+		if(playerIsNull() || !config.skullData()) {
 			return;
 		}
 
@@ -280,6 +291,10 @@ public class ConnectorPlugin extends Plugin {
 				|| lastSkullState.getSkull() == null && player.getSkullIcon() != null) {
 			requestHandler.submit(lastSkullState = new SkullUpdate(player.getName(), player.getSkullIcon()));
 		}
+	}
+
+	private boolean playerIsNull() {
+		return player == null || player.getName() == null;
 	}
 
 	@Provides
