@@ -1,5 +1,6 @@
 package com.rseye.io;
 
+import com.google.gson.Gson;
 import com.rseye.ConnectorConfig;
 import com.rseye.util.Postable;
 import okhttp3.*;
@@ -14,10 +15,12 @@ public class RequestHandler {
     public static final Logger log = LoggerFactory.getLogger(RequestHandler.class);
     private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
     private final OkHttpClient client;
+    private final Gson gson;
     private final ConnectorConfig config;
 
-    public RequestHandler(OkHttpClient client, ConnectorConfig config) {
+    public RequestHandler(OkHttpClient client, Gson gson, ConnectorConfig config) {
         this.client = client;
+        this.gson = gson;
         this.config = config;
     }
 
@@ -26,7 +29,7 @@ public class RequestHandler {
                 .url(config.baseEndpoint() + update.endpoint().location)
                 .header("Authorization", "Bearer: " + config.bearerToken())
                 .header("X-Request-Id", UUID.randomUUID().toString())
-                .post(RequestBody.create(JSON, update.toJson()))
+                .post(RequestBody.create(JSON, gson.toJson(update)))
                 .build();
 
         client.newCall(request).enqueue(new Callback() {

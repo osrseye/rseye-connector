@@ -1,5 +1,6 @@
 package com.rseye;
 
+import com.google.gson.Gson;
 import com.google.inject.Provides;
 import com.rseye.io.RequestHandler;
 import com.rseye.update.*;
@@ -34,6 +35,9 @@ public class ConnectorPlugin extends Plugin {
 	private OkHttpClient okHttpClient;
 
 	@Inject
+	private Gson gson;
+
+	@Inject
 	private ConnectorConfig config;
 
 	@Inject
@@ -56,7 +60,7 @@ public class ConnectorPlugin extends Plugin {
 	protected void startUp() {
 		log.info("rseye-connector started!");
 		this.ticks = new AtomicInteger(0);
-		this.requestHandler = new RequestHandler(okHttpClient, config);
+		this.requestHandler = new RequestHandler(okHttpClient, gson, config);
 		this.lastStatUpdate = new CopyOnWriteArrayList<>();
 		this.lastQuestStateUpdate = new CopyOnWriteArrayList<>();
 		this.questStates = new ConcurrentHashMap<>();
