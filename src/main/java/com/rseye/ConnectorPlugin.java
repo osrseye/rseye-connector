@@ -99,7 +99,7 @@ public class ConnectorPlugin extends Plugin {
 		processQuestUpdate();
 		processBankUpdate();
 
-		ticks.set(ticks.get() > 144000 ? 0 : ticks.get()); // reset tick count after 24 hours - otherwise we'll run into an int overflow in roughly 45 years.
+		ticks.set(ticks.get() > 144000 ? 0 : ticks.get() + 1); // reset tick count after 24 hours - otherwise we'll run into an int overflow in roughly 45 years.
 	}
 
 	@Subscribe
