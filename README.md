@@ -262,6 +262,6 @@
 ```json
 {
   "username":"cradcol1",
-  "skull":"SKULL"
+  "skull":"0"
 }
 ```
