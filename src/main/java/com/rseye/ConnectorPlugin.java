@@ -7,7 +7,7 @@ import com.rseye.update.*;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
 import net.runelite.api.events.*;
-import net.runelite.api.widgets.WidgetInfo;
+import net.runelite.api.widgets.ComponentID;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.NpcLootReceived;
@@ -236,7 +236,7 @@ public class ConnectorPlugin extends Plugin {
 			return;
 		}
 
-		if(client.getWidget(WidgetInfo.BANK_ITEM_CONTAINER) != null) {
+		if(client.getWidget(ComponentID.BANK_ITEM_CONTAINER) != null) {
 			isBankOpen = true;
 			lastBankState = client.getItemContainer(InventoryID.BANK);
 			return;
