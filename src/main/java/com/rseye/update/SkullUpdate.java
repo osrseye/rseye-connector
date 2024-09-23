@@ -4,7 +4,6 @@ import com.rseye.io.RequestHandler;
 import com.rseye.util.Postable;
 import lombok.Getter;
 import lombok.Setter;
-import net.runelite.api.SkullIcon;
 
 public class SkullUpdate implements Postable {
     @Getter
@@ -13,9 +12,9 @@ public class SkullUpdate implements Postable {
 
     @Getter
     @Setter
-    private SkullIcon skull;
+    private int skull;
 
-    public SkullUpdate(String username, SkullIcon skull) {
+    public SkullUpdate(String username, int skull) {
         this.username = username;
         this.skull = skull;
     }
