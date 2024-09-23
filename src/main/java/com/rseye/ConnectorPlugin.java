@@ -65,7 +65,7 @@ public class ConnectorPlugin extends Plugin {
 		this.lastQuestStateUpdate = new CopyOnWriteArrayList<>();
 		this.questStates = new ConcurrentHashMap<>();
 		this.lastOverheadState = new OverheadUpdate("", null);
-		this.lastSkullState = new SkullUpdate("", null);
+		this.lastSkullState = new SkullUpdate("", -1);
 	}
 
 	@Override
@@ -291,8 +291,8 @@ public class ConnectorPlugin extends Plugin {
 			return;
 		}
 
-		if(lastSkullState.getSkull() != null && !lastSkullState.getSkull().equals(player.getSkullIcon())
-				|| lastSkullState.getSkull() == null && player.getSkullIcon() != null) {
+		if(lastSkullState.getSkull() != -1 && lastSkullState.getSkull() != player.getSkullIcon()
+				|| lastSkullState.getSkull() == -1 && player.getSkullIcon() != -1) {
 			requestHandler.submit(lastSkullState = new SkullUpdate(player.getName(), player.getSkullIcon()));
 		}
 	}
