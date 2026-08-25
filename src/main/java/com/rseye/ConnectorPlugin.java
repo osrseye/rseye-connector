@@ -6,8 +6,10 @@ import com.rseye.io.RequestHandler;
 import com.rseye.update.*;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
+import net.runelite.api.gameval.InterfaceID;
+import net.runelite.api.gameval.InventoryID;
 import net.runelite.api.events.*;
-import net.runelite.api.widgets.ComponentID;
+import net.runelite.api.gameval.VarPlayerID;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.NpcLootReceived;
@@ -144,11 +146,11 @@ public class ConnectorPlugin extends Plugin {
 
 	@Subscribe
 	public void onItemContainerChanged(final ItemContainerChanged itemContainerChanged) {
-		if(itemContainerChanged.getItemContainer() == client.getItemContainer(InventoryID.INVENTORY)) {
+		if(itemContainerChanged.getItemContainer() == client.getItemContainer(InventoryID.INV)) {
 			processInventoryUpdate(itemContainerChanged); // process inventory
 			return;
 		}
-		if(itemContainerChanged.getItemContainer() == client.getItemContainer(InventoryID.EQUIPMENT)) {
+		if(itemContainerChanged.getItemContainer() == client.getItemContainer(InventoryID.WORN)) {
 			processEquipmentUpdate(itemContainerChanged); // process equipment
 			return;
 		}
@@ -159,7 +161,7 @@ public class ConnectorPlugin extends Plugin {
 
 		if(itemContainerChanged.getItemContainer() == client.getItemContainer(itemContainerChanged.getContainerId())) {
 			LootUpdate lootUpdate = new LootUpdate(player.getName(), itemContainerChanged.getContainerId(), itemContainerChanged.getItemContainer());
-			if(lootUpdate.getItems().size() < 1) {
+			if(lootUpdate.getItems().isEmpty()) {
 				return;
 			}
 			requestHandler.submit(lootUpdate);
@@ -231,7 +233,7 @@ public class ConnectorPlugin extends Plugin {
 			}
 		}
 		if(!lastQuestStateUpdate.isEmpty()) {
-			requestHandler.submit(new QuestUpdate(player.getName(), client.getVarpValue(VarPlayer.QUEST_POINTS), lastQuestStateUpdate));
+			requestHandler.submit(new QuestUpdate(player.getName(), client.getVarpValue(VarPlayerID.QP), lastQuestStateUpdate));
 			lastQuestStateUpdate.clear();
 		}
 	}
@@ -241,7 +243,7 @@ public class ConnectorPlugin extends Plugin {
 			return;
 		}
 
-		if(client.getWidget(ComponentID.BANK_ITEM_CONTAINER) != null) {
+		if(client.getWidget(InterfaceID.Bankmain.ITEMS) != null) {
 			isBankOpen = true;
 			lastBankState = client.getItemContainer(InventoryID.BANK);
 			return;
