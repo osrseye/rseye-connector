@@ -89,9 +89,16 @@ public class ConnectorPlugin extends Plugin {
 			return;
 		}
 
-		if (playerIsNull()) {
+		if(playerIsNull()) {
 			player = client.getLocalPlayer();
-			return;
+			if(playerIsNull()) {
+				return; // Player hasn't spawned yet, wait for the next tick
+			} else {
+				// Player successfully spawned!
+				if(config.loginData()) {
+					requestHandler.submit(new LoginUpdate(player.getName(), GameState.LOGGED_IN));
+				}
+			}
 		}
 
 		if(ticks.get() % config.positionDataFrequency() == 0) {
@@ -117,18 +124,11 @@ public class ConnectorPlugin extends Plugin {
 	public void onGameStateChanged(final GameStateChanged gsc) {
 		gameState = gsc.getGameState();
 
-		// if state is login_screen, clear player. this happens if the player logs out (not hop)
-		if(gameState == GameState.LOGIN_SCREEN) {
+		// if state is login_screen or logged in, clear player.
+		if(gameState == GameState.LOGIN_SCREEN || gameState == GameState.LOGGED_IN) {
 			ticks.set(0);
 			player = null;
 			questStates = new ConcurrentHashMap<>();
-			return;
-		}
-
-		if(gameState == GameState.LOGGED_IN) {
-			ticks.set(0);
-			player = client.getLocalPlayer();
-			questStates = new ConcurrentHashMap<>(); // re-init quest states else the initial quest data will only ever be sent once, unlike other similar events which fire every time a "LOGGED_IN" event occurs
 			return;
 		}
 
