@@ -83,8 +83,13 @@ public class ConnectorPlugin extends Plugin {
 
 	@Subscribe
 	public void onGameTick(final GameTick tick) {
-		if(playerIsNull() || gameState != GameState.LOGGED_IN){
-			return; // player is set in #onGameStateChanged
+		if(gameState != GameState.LOGGED_IN){
+			return;
+		}
+
+		if (playerIsNull()) {
+			player = client.getLocalPlayer();
+			return;
 		}
 
 		if(ticks.get() % config.positionDataFrequency() == 0) {
